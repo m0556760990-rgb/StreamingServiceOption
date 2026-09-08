@@ -1,0 +1,55 @@
+country,name,flag,data_tier,plan_enabled
+US,USA,https://cdn.watchmode.com/misc_images/icons/usFlag2.png,1,True
+CA,Canada,https://cdn.watchmode.com/misc_images/icons/flagCA.png,1,False
+GB,Great Britain,https://cdn.watchmode.com/misc_images/icons/flagGB.png,1,False
+AU,Australia,https://cdn.watchmode.com/misc_images/icons/flagAU.png,1,False
+BR,Brazil,https://cdn.watchmode.com/misc_images/icons/flagBR.png,1,False
+ES,Spain,https://cdn.watchmode.com/misc_images/icons/flagES.png,1,True
+IN,India,https://cdn.watchmode.com/misc_images/icons/flagIN.png,1,False
+AE,United Arab Emirates,https://cdn.watchmode.com/misc_images/icons/flagAE.png,2,False
+AT,Austria,https://cdn.watchmode.com/misc_images/icons/flagAT.png,1,False
+IT,Italy,https://cdn.watchmode.com/misc_images/icons/flagIT.png,1,False
+AR,Argentina,https://cdn.watchmode.com/misc_images/icons/flagAR.png,1,False
+BE,Belgium,https://cdn.watchmode.com/misc_images/icons/flagBE.png,1,False
+BG,Bulgaria,https://cdn.watchmode.com/misc_images/icons/flagBG.png,2,False
+CL,Chile,https://cdn.watchmode.com/misc_images/icons/flagCL.png,2,False
+CO,Colombia,https://cdn.watchmode.com/misc_images/icons/flagCO.png,1,False
+HR,Croatia,https://cdn.watchmode.com/misc_images/icons/flagHR.png,2,False
+CZ,Czech Republic,https://cdn.watchmode.com/misc_images/icons/flagCZ.png,2,False
+DK,Denmark,https://cdn.watchmode.com/misc_images/icons/flagDK.png,1,False
+EC,Ecuador,https://cdn.watchmode.com/misc_images/icons/flagEC.png,2,False
+EE,Estonia,https://cdn.watchmode.com/misc_images/icons/flagEE.png,2,False
+FI,Finland,https://cdn.watchmode.com/misc_images/icons/flagFI.png,1,False
+FR,France,https://cdn.watchmode.com/misc_images/icons/flagFR.png,1,False
+DE,Germany,https://cdn.watchmode.com/misc_images/icons/flagDE.png,1,False
+GR,Greece,https://cdn.watchmode.com/misc_images/icons/flagGR.png,2,False
+HK,Hong Kong,https://cdn.watchmode.com/misc_images/icons/flagHK.png,2,False
+HU,Hungary,https://cdn.watchmode.com/misc_images/icons/flagHU.png,2,False
+IS,Iceland,https://cdn.watchmode.com/misc_images/icons/flagIS.png,1,False
+ID,Indonesia,https://cdn.watchmode.com/misc_images/icons/flagID.png,2,False
+IE,Ireland,https://cdn.watchmode.com/misc_images/icons/flagIE.png,1,False
+IL,Israel,https://cdn.watchmode.com/misc_images/icons/flagIL.png,2,True
+JP,Japan,https://cdn.watchmode.com/misc_images/icons/flagJP.png,1,False
+LT,Lithuania,https://cdn.watchmode.com/misc_images/icons/flagLT.png,2,False
+MY,Malaysia,https://cdn.watchmode.com/misc_images/icons/flagMY.png,2,False
+MX,Mexico,https://cdn.watchmode.com/misc_images/icons/flagMX.png,1,False
+NL,Netherlands,https://cdn.watchmode.com/misc_images/icons/flagNL.png,1,False
+NZ,New Zealand,https://cdn.watchmode.com/misc_images/icons/flagNZ.png,1,False
+NO,Norway,https://cdn.watchmode.com/misc_images/icons/flagNO.png,1,False
+PA,Panama,https://cdn.watchmode.com/misc_images/icons/flagPA.png,2,False
+PE,Peru,https://cdn.watchmode.com/misc_images/icons/flagPE.png,2,False
+PH,Philippines,https://cdn.watchmode.com/misc_images/icons/flagPH.png,2,False
+PL,Poland,https://cdn.watchmode.com/misc_images/icons/flagPL.png,1,False
+PT,Portugal,https://cdn.watchmode.com/misc_images/icons/flagPT.png,1,False
+RO,Romania,https://cdn.watchmode.com/misc_images/icons/flagRO.png,2,False
+RU,Russia,https://cdn.watchmode.com/misc_images/icons/flagRU.png,2,False
+RS,Serbia,https://cdn.watchmode.com/misc_images/icons/flagRS.png,2,False
+SG,Singapore,https://cdn.watchmode.com/misc_images/icons/flagSG.png,1,False
+ZA,South Africa,https://cdn.watchmode.com/misc_images/icons/flagZA.png,1,False
+KR,South Korea,https://cdn.watchmode.com/misc_images/icons/flagKR.png,1,False
+SE,Sweden,https://cdn.watchmode.com/misc_images/icons/flagSE.png,1,False
+CH,Switzerland,https://cdn.watchmode.com/misc_images/icons/flagCH.png,1,False
+TH,Thailand,https://cdn.watchmode.com/misc_images/icons/flagTH.png,2,False
+TR,Turkey,https://cdn.watchmode.com/misc_images/icons/flagTR.png,2,False
+UA,Ukraine,https://cdn.watchmode.com/misc_images/icons/flagMX.png,2,False
+VN,Vietnam,https://cdn.watchmode.com/misc_images/icons/flagVN.png,2,False

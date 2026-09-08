@@ -1,0 +1,38 @@
+id,name,tmdb_id
+1,Action,28
+39,Action & Adventure,10759
+30,Adult,0
+2,Adventure,12
+3,Animation,16
+33,Anime,0
+31,Biography,0
+4,Comedy,35
+5,Crime,80
+6,Documentary,99
+7,Drama,18
+8,Family,10751
+9,Fantasy,14
+34,Food,0
+28,Game Show,0
+10,History,36
+11,Horror,27
+21,Kids,10762
+12,Music,10402
+32,Musical,0
+13,Mystery,9648
+36,Nature,0
+22,News,10763
+23,Reality,10764
+14,Romance,10749
+40,Sci-Fi & Fantasy,10765
+15,Science Fiction,878
+25,Soap,10766
+29,Sports,0
+37,Supernatural,0
+26,Talk,10767
+17,Thriller,53
+35,Travel,0
+38,TV Movie,10770
+18,War,10752
+41,War & Politics,10768
+19,Western,37
