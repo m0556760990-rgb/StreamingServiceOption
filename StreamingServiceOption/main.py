@@ -7,11 +7,281 @@ import plotly.express as px
 import requests
 import seaborn as sns
 import streamlit as st
-df = pd.read_csv("israel_animation.csv")
-print(df.head())
-print(df.columns)
-titles_df = pd.read_csv("USTitles.csv")
-print(len(titles_df))
+
+def get_base64_image(image_path):
+    with open(image_path, "rb") as image_file:
+        return base64.b64encode(image_file.read()).decode()
+
+
+background_image = get_base64_image("Stars.png")
+
+
+st.markdown(
+    f"""
+    <style>
+
+    /* ==============================
+       MAIN PAGE + FILM BACKGROUND
+       ============================== */
+
+    .stApp {{
+        background-image:
+            url("data:image/png;base64,{background_image}");
+
+        background-size: 100% 100%;
+        background-position: center top;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+    }}
+
+
+    /* ==============================
+       CENTER CONTENT AREA
+       ============================== */
+
+    .block-container {{
+        max-width: 1100px;
+        padding-top: 2rem;
+        padding-bottom: 4rem;
+        padding-left: 3rem;
+        padding-right: 3rem;
+
+        background: rgba(255, 255, 255, 0.94);
+
+        border-radius: 18px;
+
+        box-shadow:
+            0px 8px 30px rgba(0, 0, 0, 0.08);
+    }}
+
+
+    /* ==============================
+       MAIN TITLE
+       ============================== */
+
+    h1 {{
+        color: #0F2454 !important;
+        font-size: 46px !important;
+        font-weight: 800 !important;
+        letter-spacing: -1px;
+    }}
+
+
+    /* ==============================
+       HEADERS
+       ============================== */
+
+    h2 {{
+        color: #102552 !important;
+        font-weight: 800 !important;
+    }}
+
+    h3 {{
+        color: #17376E !important;
+        font-weight: 700 !important;
+    }}
+
+
+    /* ==============================
+       NORMAL TEXT
+       ============================== */
+
+    p {{
+        color: #52627A !important;
+        font-size: 17px !important;
+    }}
+
+
+    /* ==============================
+       SELECTBOX LABELS
+       ============================== */
+
+    div[data-testid="stSelectbox"] label {{
+        color: #102552 !important;
+        font-size: 16px !important;
+        font-weight: 700 !important;
+    }}
+
+
+    /* ==============================
+       SELECTBOX
+       ============================== */
+
+    div[data-baseweb="select"] > div {{
+        background-color: #abaff5 !important;
+
+        border:
+            1px solid #CBD5E1 !important;
+
+        border-radius:
+            10px !important;
+
+        min-height:
+            48px;
+
+        box-shadow:
+            0 2px 5px rgba(0,0,0,0.04);
+    }}
+
+
+    /* Selectbox text */
+
+    div[data-baseweb="select"] span {{
+        color: #1F2937 !important;
+        font-size: 16px !important;
+    }}
+
+
+    /* ==============================
+       BUTTONS
+       ============================== */
+
+    div.stButton > button {{
+        width: 100%;
+
+        height: 50px;
+
+        border-radius: 10px;
+
+        border: none;
+
+        background:
+            linear-gradient(
+                90deg,
+                #1677F0,
+                #246BDF
+            );
+
+        color: white;
+
+        font-size: 17px;
+
+        font-weight: 700;
+
+        box-shadow:
+            0 4px 12px rgba(30, 100, 220, 0.25);
+
+        transition:
+            0.2s;
+    }}
+
+
+    /* Button hover */
+
+    div.stButton > button:hover {{
+
+        transform:
+            translateY(-1px);
+
+        box-shadow:
+            0 6px 16px rgba(30, 100, 220, 0.35);
+
+        color:
+            white;
+
+    }}
+
+
+    /* ==============================
+       TABS
+       ============================== */
+
+    div[data-baseweb="tab-list"] {{
+        gap: 8px;
+    }}
+
+
+    div[data-baseweb="tab-list"] button {{
+
+        background-color:
+            #F7F9FC;
+
+        border:
+            1px solid #DCE3ED;
+
+        border-radius:
+            10px;
+
+        padding:
+            10px 18px;
+
+        font-weight:
+            700 !important;
+
+    }}
+
+
+    /* Selected tab */
+
+    div[data-baseweb="tab-list"]
+    button[aria-selected="true"] {{
+
+        background:
+            #1677F0 !important;
+
+        color:
+            white !important;
+
+    }}
+
+
+    /* ==============================
+       DATAFRAME
+       ============================== */
+
+    div[data-testid="stDataFrame"] {{
+
+        border-radius:
+            12px;
+
+        overflow:
+            hidden;
+
+        border:
+            1px solid #E1E7EF;
+
+    }}
+
+
+    /* ==============================
+       CONTAINERS / CARDS
+       ============================== */
+
+    div[data-testid="stVerticalBlockBorderWrapper"] {{
+
+        background:
+            rgba(255,255,255,0.96);
+
+        border:
+            1px solid #E1E7EF !important;
+
+        border-radius:
+            14px !important;
+
+        box-shadow:
+            0px 4px 15px rgba(0,0,0,0.05);
+
+    }}
+
+
+    /* ==============================
+       ALERT / ERROR BOXES
+       ============================== */
+
+    div[data-testid="stAlert"] {{
+
+        border-radius:
+            10px;
+
+    }}
+
+
+    </style>
+    """,
+
+    unsafe_allow_html=True
+)
+
 
 #*Function to print all the genres from the API*
 def ShowGenres(API_KEY):
@@ -349,19 +619,3 @@ if st.session_state["year_genre_titles"] is not None:
     else:
         st.write("No titles found")
 
-# This is a sample Python script.
-
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
-
-
-#def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    #print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
-
-
-# Press the green button in the gutter to run the script.
-#if __name__ == '__main__':
-    #print_hi('PyCharm')
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
