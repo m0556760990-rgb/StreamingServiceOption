@@ -932,6 +932,9 @@ def show_random_movie(movie):
     else:
         st.write("No overview available.")
 
+#to prevent repeated recommendations#
+if "recommended_titles" not in st.session_state:
+    st.session_state.recommended_titles = []
 
 API_KEY = "mjzfRQYZZq9fMx2RM3c77FX7ncNvgwjtA2Ky3f7q"
 urltitles = "https://api.watchmode.com/v1/list-titles"
@@ -1415,12 +1418,12 @@ with tab3:
                     # GET MATCHING TITLES
                     # --------------------------------
 
-                    url5 = (
+                    url3 = (
                         "https://api.watchmode.com/"
                         "v1/list-titles/"
                     )
 
-                    params5 = {
+                    params3 = {
                         "types": media_type5,
                         "regions": country_code5,
                         "source_ids": source_id5,
@@ -1435,18 +1438,18 @@ with tab3:
                         "limit": 250
                     }
 
-                    response5 = requests.get(
-                        url5,
+                    response3 = requests.get(
+                        url3,
                         headers=headers,
-                        params=params5,
+                        params=params3,
                         timeout=10
                     )
 
-                    response5.raise_for_status()
+                    response3.raise_for_status()
 
-                    data5 = response5.json()
+                    data3 = response3.json()
 
-                    titles5 = data5.get(
+                    titles3 = data3.get(
                         "titles",
                         []
                     )
@@ -1455,7 +1458,7 @@ with tab3:
                     # NO RESULTS
                     # --------------------------------
 
-                    if len(titles5) == 0:
+                    if len(titles3) == 0:
 
                         st.warning(
                             "No titles were found with "
@@ -1468,15 +1471,43 @@ with tab3:
                         # --------------------------------
                         # RANDOMLY CHOOSE FROM
                         # TOP 50 POPULAR RESULTS
+
+                        candidate_titles3 = titles5[:50]
+
+                        # --------------------------------
+                        # REMOVE ALREADY RECOMMENDED TITLES
                         # --------------------------------
 
-                        candidate_titles5 = titles5[:50]
+                        available_titles3 = [
+                            title for title in candidate_titles3
+                            if title["id"] not in st.session_state.recommended_titles
+                        ]
 
-                        selected_title5 = random.choice(
-                            candidate_titles5
+                        # --------------------------------
+                        # IF ALL 50 WERE ALREADY SHOWN,
+                        # RESET THE HISTORY
+                        # --------------------------------
+
+                        if len(available_titles3) == 0:
+                            st.session_state.recommended_titles = []
+                            available_titles5 = candidate_titles3
+
+                        # --------------------------------
+                        # RANDOMLY CHOOSE A NEW TITLE
+                        # --------------------------------
+
+                        selected_title3 = random.choice(
+                            available_titles3
                         )
 
-                        title_id5 = selected_title5[
+                        title_id3 = selected_title3["id"]
+
+                        # Remember this recommendation
+                        st.session_state.recommended_titles.append(
+                            title_id3
+                        )
+
+                        title_id3 = selected_title3[
                             "id"
                         ]
 
@@ -1485,21 +1516,21 @@ with tab3:
                         # GET FULL DETAILS
                         # --------------------------------
 
-                        details_url5 = (
+                        details_url3 = (
                             "https://api.watchmode.com/"
-                            f"v1/title/{title_id5}/details/"
+                            f"v1/title/{title_id3}/details/"
                         )
 
-                        details_response5 = requests.get(
-                            details_url5,
+                        details_response3 = requests.get(
+                            details_url3,
                             headers=headers,
                             timeout=10
                         )
 
-                        details_response5.raise_for_status()
+                        details_response3.raise_for_status()
 
-                        title_details5 = (
-                            details_response5.json()
+                        title_details3 = (
+                            details_response3.json()
                         )
 
                         # --------------------------------
@@ -1507,7 +1538,7 @@ with tab3:
                         # --------------------------------
 
                         show_random_movie(
-                            title_details5
+                            title_details3
                         )
 
                 # --------------------------------
@@ -1556,20 +1587,20 @@ with tab4:
     # INITIALIZE SESSION STATE
     # ------------------------------------------------
 
-    if "watch_results6" not in st.session_state:
-        st.session_state.watch_results6 = []
+    if "watch_results4" not in st.session_state:
+        st.session_state.watch_results4 = []
 
-    if "watch_search6" not in st.session_state:
-        st.session_state.watch_search6 = ""
+    if "watch_search4" not in st.session_state:
+        st.session_state.watch_search4 = ""
 
-    if "watch_media6" not in st.session_state:
-        st.session_state.watch_media6 = None
+    if "watch_media4" not in st.session_state:
+        st.session_state.watch_media4 = None
 
     # ------------------------------------------------
     # TITLE SEARCH
     # ------------------------------------------------
 
-    search_title6 = st.text_input(
+    search_title4 = st.text_input(
         "🎬 Movie or TV Show Name",
         placeholder="Example: Twilight",
         key="watch_search_title"
@@ -1579,7 +1610,7 @@ with tab4:
     # MEDIA TYPE
     # ------------------------------------------------
 
-    media_select6 = st.radio(
+    media_select4 = st.radio(
         "What are you looking for?",
         list(MediaTypes.keys()),
         horizontal=True,
@@ -1591,7 +1622,7 @@ with tab4:
     # COUNTRY
     # ------------------------------------------------
 
-    country6 = st.radio(
+    country4 = st.radio(
         "Where are you watching from?",
         list(country_codes.keys()),
         horizontal=True,
@@ -1610,22 +1641,22 @@ with tab4:
     # SEARCH BUTTON
     # ------------------------------------------------
 
-    search_button6 = st.button(
+    search_button4 = st.button(
         "🔎 Search For Title",
         type="primary",
         use_container_width=True,
         key="watch_search_button"
     )
 
-    if search_button6:
+    if search_button4:
 
-        if not search_title6.strip():
+        if not search_title4.strip():
 
             st.warning(
                 "Please enter a movie or TV show name."
             )
 
-        elif media_select6 is None:
+        elif media_select4 is None:
 
             st.warning(
                 "Please choose Movie or TV Series."
@@ -1646,19 +1677,19 @@ with tab4:
                     # 4 = TV shows only
                     # ----------------------------------------
 
-                    if media_select6 == "Movie":
-                        search_type6 = 3
+                    if media_select4 == "Movie":
+                        search_type4 = 3
                     else:
-                        search_type6 = 4
+                        search_type4 = 4
 
-                    autocomplete_url6 = (
+                    autocomplete_url4 = (
                         "https://api.watchmode.com/"
                         "v1/autocomplete-search/"
                     )
 
-                    autocomplete_params6 = {
-                        "search_value": search_title6.strip(),
-                        "search_type": search_type6
+                    autocomplete_params4 = {
+                        "search_value": search_title4.strip(),
+                        "search_type": search_type4
                     }
 
                     # ----------------------------------------
@@ -1666,20 +1697,20 @@ with tab4:
                     # NORMAL AUTOCOMPLETE SEARCH
                     # ----------------------------------------
 
-                    autocomplete_response6 = requests.get(
-                        autocomplete_url6,
+                    autocomplete_response4 = requests.get(
+                        autocomplete_url4,
                         headers=headers,
-                        params=autocomplete_params6,
+                        params=autocomplete_params4,
                         timeout=10
                     )
 
-                    autocomplete_response6.raise_for_status()
+                    autocomplete_response4.raise_for_status()
 
-                    autocomplete_data6 = (
-                        autocomplete_response6.json()
+                    autocomplete_data4 = (
+                        autocomplete_response4.json()
                     )
 
-                    results6 = autocomplete_data6.get(
+                    results4 = autocomplete_data4.get(
                         "results",
                         []
                     )
@@ -1688,9 +1719,9 @@ with tab4:
                     # ONLY KEEP TITLES
                     # ----------------------------------------
 
-                    results6 = [
+                    results4 = [
                         result
-                        for result in results6
+                        for result in results4
                         if result.get("result_type") == "title"
                     ]
 
@@ -1699,27 +1730,27 @@ with tab4:
                     # TO WHAT USER ENTERED
                     # ----------------------------------------
 
-                    original_search6 = (
-                        search_title6.strip().lower()
+                    original_search4 = (
+                        search_title4.strip().lower()
                     )
 
-                    best_similarity6 = 0
+                    best_similarity4 = 0
 
-                    for result in results6:
+                    for result in results4:
 
-                        result_name6 = (
+                        result_name4 = (
                             result.get("name", "")
                             .lower()
                         )
 
-                        similarity6 = SequenceMatcher(
+                        similarity4 = SequenceMatcher(
                             None,
                             original_search6,
-                            result_name6
+                            result_name4
                         ).ratio()
 
-                        if similarity6 > best_similarity6:
-                            best_similarity6 = similarity6
+                        if similarity4 > best_similarity6:
+                            best_similarity4 = similarity6
 
                     # ----------------------------------------
                     # TYPO FALLBACK
@@ -1730,30 +1761,30 @@ with tab4:
                     # ----------------------------------------
 
                     if (
-                            len(results6) == 0
-                            or best_similarity6 < 0.55
+                            len(results4) == 0
+                            or best_similarity4 < 0.55
                     ):
 
-                        cleaned_search6 = (
-                            search_title6
+                        cleaned_search4 = (
+                            search_title4
                             .strip()
                         )
 
                         # Use first 3-4 characters
                         # for fallback autocomplete
 
-                        if len(cleaned_search6) >= 4:
-                            fallback_search6 = (
-                                cleaned_search6[:4]
+                        if len(cleaned_search4) >= 4:
+                            fallback_search4 = (
+                                cleaned_search4[:4]
                             )
 
                         else:
-                            fallback_search6 = (
-                                cleaned_search6
+                            fallback_search4 = (
+                                cleaned_search4
                             )
 
-                        fallback_params6 = {
-                            "search_value": fallback_search6,
+                        fallback_params4 = {
+                            "search_value": fallback_search4,
                             "search_type": search_type6
                         }
 
@@ -1762,8 +1793,8 @@ with tab4:
                         # ONLY USED FOR POSSIBLE MISSPELLING
                         # ------------------------------------
 
-                        fallback_response6 = requests.get(
-                            autocomplete_url6,
+                        fallback_response4 = requests.get(
+                            autocomplete_url4,
                             headers=headers,
                             params=fallback_params6,
                             timeout=10
@@ -1771,21 +1802,21 @@ with tab4:
 
                         fallback_response6.raise_for_status()
 
-                        fallback_data6 = (
-                            fallback_response6.json()
+                        fallback_data4 = (
+                            fallback_response4.json()
                         )
 
-                        fallback_results6 = (
-                            fallback_data6.get(
+                        fallback_results4 = (
+                            fallback_data4.get(
                                 "results",
                                 []
                             )
                         )
 
-                        fallback_results6 = [
+                        fallback_results4 = [
                             result
                             for result
-                            in fallback_results6
+                            in fallback_results4
                             if result.get(
                                 "result_type"
                             ) == "title"
@@ -1794,27 +1825,27 @@ with tab4:
                         # Add fallback results
                         # to original results
 
-                        results6.extend(
-                            fallback_results6
+                        results4.extend(
+                            fallback_results4
                         )
 
                     # ----------------------------------------
                     # REMOVE DUPLICATES
                     # ----------------------------------------
 
-                    unique_results6 = {}
+                    unique_results4 = {}
 
-                    for result in results6:
+                    for result in results4:
 
-                        result_id6 = result.get("id")
+                        result_id4 = result.get("id")
 
-                        if result_id6 is not None:
-                            unique_results6[
-                                result_id6
+                        if result_id4 is not None:
+                            unique_results4[
+                                result_id4
                             ] = result
 
-                    results6 = list(
-                        unique_results6.values()
+                    results4 = list(
+                        unique_results4.values()
                     )
 
                     # ----------------------------------------
@@ -1823,30 +1854,30 @@ with tab4:
                     # Compare user's text to each title.
                     # ----------------------------------------
 
-                    for result in results6:
-                        result_name6 = (
+                    for result in results4:
+                        result_name4 = (
                             result.get(
                                 "name",
                                 ""
                             ).lower()
                         )
 
-                        fuzzy_score6 = SequenceMatcher(
+                        fuzzy_score4 = SequenceMatcher(
                             None,
-                            original_search6,
-                            result_name6
+                            original_search4,
+                            result_name4
                         ).ratio()
 
                         result[
                             "fuzzy_score"
-                        ] = fuzzy_score6
+                        ] = fuzzy_score4
 
                     # ----------------------------------------
                     # SORT BEST MATCHES FIRST
                     # ----------------------------------------
 
-                    results6 = sorted(
-                        results6,
+                    results4 = sorted(
+                        results4,
                         key=lambda x: (
                             x.get(
                                 "fuzzy_score",
@@ -1863,25 +1894,25 @@ with tab4:
                     # Keep a reasonable amount
                     # of suggestions
 
-                    results6 = results6[:10]
+                    results4 = results4[:10]
 
                     # ----------------------------------------
                     # SAVE RESULTS
                     # ----------------------------------------
 
-                    st.session_state.watch_results6 = (
-                        results6
+                    st.session_state.watch_results4 = (
+                        results4
                     )
 
-                    st.session_state.watch_search6 = (
-                        search_title6
+                    st.session_state.watch_search4 = (
+                        search_title4
                     )
 
-                    st.session_state.watch_media6 = (
-                        media_select6
+                    st.session_state.watch_media4 = (
+                        media_select4
                     )
 
-                    if len(results6) == 0:
+                    if len(results4) == 0:
                         st.warning(
                             "We couldn't find anything "
                             "similar to that title. "
@@ -1926,10 +1957,10 @@ with tab4:
         # and media type have not changed
 
         if (
-                search_title6
-                == st.session_state.watch_search6
-                and media_select6
-                == st.session_state.watch_media6
+                search_title4
+                == st.session_state.watch_search4
+                and media_select4
+                == st.session_state.watch_media4
         ):
 
             st.divider()
@@ -1943,8 +1974,8 @@ with tab4:
                 "matching results below."
             )
 
-            results6 = (
-                st.session_state.watch_results6
+            results4 = (
+                st.session_state.watch_results4
             )
 
 
@@ -1954,73 +1985,73 @@ with tab4:
 
             def format_title6(result):
 
-                name6 = result.get(
+                name4 = result.get(
                     "name",
                     "Unknown Title"
                 )
 
-                year6 = result.get(
+                year4 = result.get(
                     "year"
                 )
 
-                result_type6 = result.get(
+                result_type4 = result.get(
                     "type",
                     ""
                 )
 
-                if result_type6 == "movie":
-                    icon6 = "🎬"
+                if result_type4 == "movie":
+                    icon4 = "🎬"
 
-                elif result_type6 == "tv_series":
-                    icon6 = "📺"
+                elif result_type4 == "tv_series":
+                    icon4 = "📺"
 
                 else:
-                    icon6 = "🎞️"
+                    icon4 = "🎞️"
 
-                if year6:
+                if year4:
                     return (
-                        f"{icon6} "
-                        f"{name6} ({year6})"
+                        f"{icon4} "
+                        f"{name4} ({year4})"
                     )
 
                 return (
-                    f"{icon6} {name6}"
+                    f"{icon4} {name4}"
                 )
 
 
-            selected_title6 = st.selectbox(
+            selected_title4 = st.selectbox(
                 "Select a title:",
-                results6,
-                format_func=format_title6,
+                results4,
+                format_func=format_title4,
                 index=None,
                 placeholder="Choose the correct title",
-                key="selected_watch_title6"
+                key="selected_watch_title4"
             )
 
             # ----------------------------------------
             # SHOW SELECTED TITLE INFORMATION
             # ----------------------------------------
 
-            if selected_title6 is not None:
+            if selected_title4 is not None:
 
-                title_id6 = selected_title6["id"]
+                title_id4 = selected_title4["id"]
 
                 # ----------------------------------------
                 # CHECK IF WE ALREADY LOADED DETAILS
                 # ----------------------------------------
 
-                if "title_details6" not in st.session_state:
-                    st.session_state.title_details6 = None
+                if "title_details4" not in st.session_state:
+                    st.session_state.title_details4 = None
 
-                if "title_details_id6" not in st.session_state:
-                    st.session_state.title_details_id6 = None
+                if "title_details_id4" not in st.session_state:
+                    st.session_state.title_details_id4 = None
 
                 # ----------------------------------------
                 # ONLY CALL DETAILS API IF USER
                 # SELECTED A DIFFERENT TITLE
                 # ----------------------------------------
 
-                if st.session_state.title_details_id6 != title_id6:
+                if st.session_state.title_details_id4 != title_id4:
 
                     with st.spinner(
                             "🎬 Loading title details..."
@@ -2028,25 +2059,25 @@ with tab4:
 
                         try:
 
-                            details_url6 = (
+                            details_url4 = (
                                 "https://api.watchmode.com/"
-                                f"v1/title/{title_id6}/details/"
+                                f"v1/title/{title_id4}/details/"
                             )
 
-                            details_response6 = requests.get(
-                                details_url6,
+                            details_response4 = requests.get(
+                                details_url4,
                                 headers=headers,
                                 timeout=10
                             )
 
-                            details_response6.raise_for_status()
+                            details_response4.raise_for_status()
 
-                            st.session_state.title_details6 = (
-                                details_response6.json()
+                            st.session_state.title_details4 = (
+                                details_response4.json()
                             )
 
-                            st.session_state.title_details_id6 = (
-                                title_id6
+                            st.session_state.title_details_id4 = (
+                                title_id4
                             )
 
                         except requests.exceptions.Timeout:
@@ -2078,15 +2109,15 @@ with tab4:
                 # DISPLAY DETAILS
                 # ----------------------------------------
 
-                movie_details6 = (
-                    st.session_state.title_details6
+                movie_details4 = (
+                    st.session_state.title_details4
                 )
 
-                if movie_details6:
+                if movie_details4:
 
                     st.divider()
 
-                    poster_col6, details_col6 = (
+                    poster_col4, details_col4 = (
                         st.columns([1, 2])
                     )
 
@@ -2094,25 +2125,25 @@ with tab4:
                     # POSTER
                     # ------------------------------------
 
-                    with poster_col6:
+                    with poster_col4:
 
-                        poster6 = movie_details6.get(
+                        poster4 = movie_details4.get(
                             "posterLarge"
                         )
 
-                        if not poster6:
-                            poster6 = movie_details6.get(
+                        if not poster4:
+                            poster4 = movie_details4.get(
                                 "poster"
                             )
 
                         # fallback to autocomplete image
 
-                        if not poster6:
-                            poster6 = selected_title6.get(
+                        if not poster4:
+                            poster4 = selected_title4.get(
                                 "image_url"
                             )
 
-                        if poster6:
+                        if poster4:
                             st.image(
                                 poster6,
                                 use_container_width=True
@@ -2122,55 +2153,55 @@ with tab4:
                     # DETAILS
                     # ------------------------------------
 
-                    with details_col6:
+                    with details_col4:
 
                         st.subheader(
-                            movie_details6.get(
+                            movie_details4.get(
                                 "title",
-                                selected_title6.get(
+                                selected_title4.get(
                                     "name",
                                     "Unknown Title"
                                 )
                             )
                         )
 
-                        year6 = movie_details6.get(
+                        year4 = movie_details4.get(
                             "year"
                         )
 
-                        runtime6 = movie_details6.get(
+                        runtime4 = movie_details4.get(
                             "runtime_minutes"
                         )
 
-                        user_rating6 = movie_details6.get(
+                        user_rating4 = movie_details4.get(
                             "user_rating"
                         )
 
-                        critic_score6 = movie_details6.get(
+                        critic_score4 = movie_details4.get(
                             "critic_score"
                         )
 
-                        genre_names6 = movie_details6.get(
+                        genre_names4 = movie_details4.get(
                             "genre_names",
                             []
                         )
 
                         st.write(
                             "**📅 Year:**",
-                            year6 if year6 else "N/A"
+                            year4 if year4 else "N/A"
                         )
 
-                        if genre_names6:
+                        if genre_names4:
                             st.write(
                                 "**🎭 Genres:**",
-                                ", ".join(genre_names6)
+                                ", ".join(genre_names4)
                             )
 
                         st.write(
                             "**⏱️ Runtime:**",
                             (
-                                f"{runtime6} minutes"
-                                if runtime6
+                                f"{runtime4} minutes"
+                                if runtime4
                                 else "N/A"
                             )
                         )
@@ -2178,8 +2209,8 @@ with tab4:
                         st.write(
                             "**⭐ User Rating:**",
                             (
-                                user_rating6
-                                if user_rating6
+                                user_rating4
+                                if user_rating4
                                 else "N/A"
                             )
                         )
@@ -2187,8 +2218,8 @@ with tab4:
                         st.write(
                             "**🍅 Critic Score:**",
                             (
-                                critic_score6
-                                if critic_score6
+                                critic_score4
+                                if critic_score4
                                 else "N/A"
                             )
                         )
@@ -2199,14 +2230,14 @@ with tab4:
 
                     st.subheader("📖 Overview")
 
-                    overview6 = movie_details6.get(
+                    overview4 = movie_details4.get(
                         "plot_overview"
                     )
 
-                    if overview6:
+                    if overview4:
 
                         st.write(
-                            overview6
+                            overview4
                         )
 
                     else:
@@ -2221,16 +2252,16 @@ with tab4:
                     # AVAILABILITY BUTTON
                     # ------------------------------------
 
-                    find_sources_button6 = st.button(
+                    find_sources_button4 = st.button(
                         "📺 Find Where To Watch",
                         type="primary",
                         use_container_width=True,
                         key="find_sources_button6"
                     )
 
-                    if find_sources_button6:
+                    if find_sources_button4:
 
-                        if country6 is None:
+                        if country4 is None:
 
                             st.warning(
                                 "Please choose a country."
@@ -2244,9 +2275,9 @@ with tab4:
 
                                 try:
 
-                                    country_code6 = (
+                                    country_code4 = (
                                         country_codes[
-                                            country6
+                                            country4
                                         ]
                                     )
 
@@ -2254,43 +2285,43 @@ with tab4:
                                     # SOURCES API CALL
                                     # ----------------------------
 
-                                    sources_url6 = (
+                                    sources_url4 = (
                                         "https://api.watchmode.com/"
-                                        f"v1/title/{title_id6}/"
+                                        f"v1/title/{title_id4}/"
                                         "sources/"
                                     )
 
-                                    sources_params6 = {
+                                    sources_params4 = {
                                         "regions":
-                                            country_code6
+                                            country_code4
                                     }
 
-                                    sources_response6 = (
+                                    sources_response4 = (
                                         requests.get(
-                                            sources_url6,
+                                            sources_url4,
                                             headers=headers,
-                                            params=sources_params6,
+                                            params=sources_params4,
                                             timeout=10
                                         )
                                     )
 
-                                    sources_response6.raise_for_status()
+                                    sources_response4.raise_for_status()
 
-                                    watch_sources6 = (
-                                        sources_response6.json()
+                                    watch_sources4 = (
+                                        sources_response4.json()
                                     )
 
                                     # ----------------------------
                                     # FILTER COUNTRY
                                     # ----------------------------
 
-                                    watch_sources6 = [
+                                    watch_sources4 = [
                                         source
                                         for source
-                                        in watch_sources6
+                                        in watch_sources4
                                         if source.get(
                                             "region"
-                                        ) == country_code6
+                                        ) == country_code4
                                     ]
 
                                     # ----------------------------
@@ -2298,9 +2329,9 @@ with tab4:
                                     # ----------------------------
 
                                     show_watch_options(
-                                        selected_title6,
-                                        watch_sources6,
-                                        country6
+                                        selected_title4,
+                                        watch_sources4,
+                                        country4
                                     )
 
                                 except requests.exceptions.Timeout:
