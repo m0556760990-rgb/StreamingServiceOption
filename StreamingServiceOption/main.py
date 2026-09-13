@@ -735,11 +735,12 @@ def show_random_movie(movie):
         st.write("No overview available.")
 
 
-API_KEY = st.secrets["api_key"]
-
+API_KEY = "mjzfRQYZZq9fMx2RM3c77FX7ncNvgwjtA2Ky3f7q"
 urltitles = "https://api.watchmode.com/v1/list-titles"
 
+License = "Proprietary"
 headers = {"X-API-Key": API_KEY}
+
 
 sources = pd.read_csv("sources.csv")
 
