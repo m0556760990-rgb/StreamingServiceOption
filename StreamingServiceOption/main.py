@@ -1116,138 +1116,138 @@ with tab2:
                 "Country": country2,
                 "service": service2,
             }
-
-            source_id2 = services2.loc[
-                services2["name"] == user_choices2["service"],
-                "id"
-            ].iloc[0]
-
-            params = {
-                "regions": country2,
-                "source_ids": source_id2,
-                "types": "tv_series",
-                "limit": 250
-            }
-
-            response = requests.get(
-                urltitles,
-                headers=headers,
-                params=params
-            )
-
-            response.raise_for_status()
-
-            data = response.json()
-
-            titles2 = pd.DataFrame(data["titles"])
-            titles2 = titles2.sort_values(by="title")
-            TVShowSelect = st.selectbox(label="Select the TV Show", options=titles2["title"], index=None,placeholder="Select TV Show",key="TV Show Select 2")
-
-            user_choices2 = {
-                "Country": country2,
-                "service": service2,
-                "TV_Show": TVShowSelect
-        }
-            if TVShowSelect is not None:
-
-                title_id2 = titles2.loc[
-                    titles2["title"] == user_choices2["TV_Show"],
+            with st.spinner("Loading TV Shows..."):
+                source_id2 = services2.loc[
+                    services2["name"] == user_choices2["service"],
                     "id"
                 ].iloc[0]
-                if st.button("🗒️ Show Episode List", use_container_width=True):
-                    # Get episode data
-                    with st.spinner("Loading..."):
-                        episodes_data = GetTVShowsEpisodes(title_id2)
 
-                        episodes = pd.DataFrame(episodes_data)
+                params = {
+                    "regions": country2,
+                    "source_ids": source_id2,
+                    "types": "tv_series",
+                    "limit": 250
+                }
 
-                        episodes = episodes[
-                            [
-                                "season_number",
-                                "episode_number",
-                                "name",
-                                "release_date",
-                                "runtime_minutes",
-                                "overview"
+                response = requests.get(
+                    urltitles,
+                    headers=headers,
+                    params=params
+                )
+
+                response.raise_for_status()
+
+                data = response.json()
+
+                titles2 = pd.DataFrame(data["titles"])
+                titles2 = titles2.sort_values(by="title")
+                TVShowSelect = st.selectbox(label="Select the TV Show", options=titles2["title"], index=None,placeholder="Select TV Show",key="TV Show Select 2")
+
+                user_choices2 = {
+                    "Country": country2,
+                    "service": service2,
+                    "TV_Show": TVShowSelect
+            }
+                if TVShowSelect is not None:
+
+                    title_id2 = titles2.loc[
+                        titles2["title"] == user_choices2["TV_Show"],
+                        "id"
+                    ].iloc[0]
+                    if st.button("🗒️ Show Episode List", use_container_width=True):
+                        # Get episode data
+                        with st.spinner("Loading..."):
+                            episodes_data = GetTVShowsEpisodes(title_id2)
+
+                            episodes = pd.DataFrame(episodes_data)
+
+                            episodes = episodes[
+                                [
+                                    "season_number",
+                                    "episode_number",
+                                    "name",
+                                    "release_date",
+                                    "runtime_minutes",
+                                    "overview"
+                                ]
                             ]
-                        ]
 
-                        episodes = episodes.rename(columns={
-                            "season_number": "Season",
-                            "episode_number": "Episode",
-                            "name": "Episode Name",
-                            "release_date": "Release Date",
-                            "runtime_minutes": "Runtime (min)",
-                            "overview": "Overview"
-                        })
+                            episodes = episodes.rename(columns={
+                                "season_number": "Season",
+                                "episode_number": "Episode",
+                                "name": "Episode Name",
+                                "release_date": "Release Date",
+                                "runtime_minutes": "Runtime (min)",
+                                "overview": "Overview"
+                            })
 
-                        episodes = episodes.sort_values(
-                            by=["Season", "Episode"]
-                        ).reset_index(drop=True)
+                            episodes = episodes.sort_values(
+                                by=["Season", "Episode"]
+                            ).reset_index(drop=True)
 
-                        # Get TV show details for poster
-                        show_details = get_title_details(title_id2)
+                            # Get TV show details for poster
+                            show_details = get_title_details(title_id2)
 
-                        poster_url = show_details.get("poster")
+                            poster_url = show_details.get("poster")
 
-                        # Create two columns
-                        poster_col, table_col = st.columns([1, 4])
+                            # Create two columns
+                            poster_col, table_col = st.columns([1, 4])
 
-                        # LEFT SIDE - POSTER
-                        with poster_col:
+                            # LEFT SIDE - POSTER
+                            with poster_col:
 
-                            st.subheader(TVShowSelect)
+                                st.subheader(TVShowSelect)
 
-                            if poster_url:
-                                st.image(
-                                    poster_url,
-                                    use_container_width=True
-                                )
-
-                        # RIGHT SIDE - EPISODE TABLE
-                        with table_col:
-
-                            st.subheader("Episodes")
-
-                            st.dataframe(
-                                episodes,
-
-                                column_config={
-                                    "Season": st.column_config.NumberColumn(
-                                        "Season",
-                                        width="small"
-                                    ),
-
-                                    "Episode": st.column_config.NumberColumn(
-                                        "Episode",
-                                        width="small"
-                                    ),
-
-                                    "Episode Name": st.column_config.TextColumn(
-                                        "Episode Name",
-                                        width="medium"
-                                    ),
-
-                                    "Release Date": st.column_config.TextColumn(
-                                        "Release Date",
-                                        width="medium"
-                                    ),
-
-                                    "Runtime (min)": st.column_config.NumberColumn(
-                                        "Runtime (min)",
-                                        width="small"
-                                    ),
-
-                                    "Overview": st.column_config.TextColumn(
-                                        "Overview",
-                                        width="large"
+                                if poster_url:
+                                    st.image(
+                                        poster_url,
+                                        use_container_width=True
                                     )
-                                },
 
-                                row_height=100,
-                                use_container_width=True,
-                                hide_index=True
-                            )
+                            # RIGHT SIDE - EPISODE TABLE
+                            with table_col:
+
+                                st.subheader("Episodes")
+
+                                st.dataframe(
+                                    episodes,
+
+                                    column_config={
+                                        "Season": st.column_config.NumberColumn(
+                                            "Season",
+                                            width="small"
+                                        ),
+
+                                        "Episode": st.column_config.NumberColumn(
+                                            "Episode",
+                                            width="small"
+                                        ),
+
+                                        "Episode Name": st.column_config.TextColumn(
+                                            "Episode Name",
+                                            width="medium"
+                                        ),
+
+                                        "Release Date": st.column_config.TextColumn(
+                                            "Release Date",
+                                            width="medium"
+                                        ),
+
+                                        "Runtime (min)": st.column_config.NumberColumn(
+                                            "Runtime (min)",
+                                            width="small"
+                                        ),
+
+                                        "Overview": st.column_config.TextColumn(
+                                            "Overview",
+                                            width="large"
+                                        )
+                                    },
+
+                                    row_height=100,
+                                    use_container_width=True,
+                                    hide_index=True
+                                )
 
 with tab3:
     st.header("What Should I Watch?")
@@ -1261,7 +1261,7 @@ with tab3:
     # MEDIA TYPE
     # --------------------------------
 
-    media_select5 = st.radio(
+    media_select3 = st.radio(
         "What would you like to watch?",
         list(MediaTypes.keys()),
         horizontal=True,
@@ -1273,7 +1273,7 @@ with tab3:
     # COUNTRY
     # --------------------------------
 
-    country5 = st.radio(
+    country3 = st.radio(
         "Where are you watching from?",
         list(country_codes.keys()),
         horizontal=True,
@@ -1290,7 +1290,7 @@ with tab3:
     # GENRE
     # --------------------------------
 
-    genre5 = st.selectbox(
+    genre3 = st.selectbox(
         "What genre are you in the mood for?",
         genres["name"].tolist(),
         index=None,
@@ -1302,7 +1302,7 @@ with tab3:
     # RELEASE YEAR
     # --------------------------------
 
-    year_range5 = st.slider(
+    year_range3 = st.slider(
         "Choose a release year range:",
         min_value=1950,
         max_value=2026,
@@ -1314,25 +1314,25 @@ with tab3:
     # STREAMING SERVICE
     # --------------------------------
 
-    service5 = None
-    services5 = None
-    country_code5 = None
+    service3 = None
+    services3 = None
+    country_code3 = None
 
-    if country5 is not None:
-        country_code5 = country_codes[country5]
+    if country3 is not None:
+        country_code3 = country_codes[country3]
 
-        sources5 = pd.read_csv("sources.csv")
+        sources3 = pd.read_csv("sources.csv")
 
-        services5 = sources5[
-            sources5["regions"].str.contains(
-                country_code5,
+        services3 = sources3[
+            sources3["regions"].str.contains(
+                country_code3,
                 na=False
             )
         ]
 
-        service5 = st.selectbox(
+        service3 = st.selectbox(
             "Choose your streaming service:",
-            services5["name"].unique(),
+            services3["name"].unique(),
             index=None,
             placeholder="Choose a streaming service",
             key="recommend_service"
@@ -1353,25 +1353,25 @@ with tab3:
         # CHECK USER INPUT
         # --------------------------------
 
-        if media_select5 is None:
+        if media_select3 is None:
 
             st.warning(
                 "Please choose Movie or TV Series."
             )
 
-        elif country5 is None:
+        elif country3 is None:
 
             st.warning(
                 "Please choose a country."
             )
 
-        elif genre5 is None:
+        elif genre3 is None:
 
             st.warning(
                 "Please choose a genre."
             )
 
-        elif service5 is None:
+        elif service3 is None:
 
             st.warning(
                 "Please choose a streaming service."
@@ -1391,16 +1391,16 @@ with tab3:
                     # TV Series -> tv_series
                     # --------------------------------
 
-                    media_type5 = MediaTypes[
-                        media_select5
+                    media_type3 = MediaTypes[
+                        media_select3
                     ]
 
                     # --------------------------------
                     # GET GENRE ID
                     # --------------------------------
 
-                    genre_id5 = genres.loc[
-                        genres["name"] == genre5,
+                    genre_id3 = genres.loc[
+                        genres["name"] == genre3,
                         "id"
                     ].iloc[0]
 
@@ -1408,8 +1408,8 @@ with tab3:
                     # GET STREAMING SERVICE ID
                     # --------------------------------
 
-                    source_id5 = services5.loc[
-                        services5["name"] == service5,
+                    source_id3 = services3.loc[
+                        services3["name"] == service3,
                         "id"
                     ].iloc[0]
 
@@ -1424,15 +1424,15 @@ with tab3:
                     )
 
                     params3 = {
-                        "types": media_type5,
-                        "regions": country_code5,
-                        "source_ids": source_id5,
-                        "genres": genre_id5,
+                        "types": media_type3,
+                        "regions": country_code3,
+                        "source_ids": source_id3,
+                        "genres": genre_id3,
                         "release_date_start": int(
-                            f"{year_range5[0]}0101"
+                            f"{year_range3[0]}0101"
                         ),
                         "release_date_end": int(
-                            f"{year_range5[1]}1231"
+                            f"{year_range3[1]}1231"
                         ),
                         "sort_by": "popularity_desc",
                         "limit": 250
@@ -1472,7 +1472,7 @@ with tab3:
                         # RANDOMLY CHOOSE FROM
                         # TOP 50 POPULAR RESULTS
 
-                        candidate_titles3 = titles5[:50]
+                        candidate_titles3 = titles3[:50]
 
                         # --------------------------------
                         # REMOVE ALREADY RECOMMENDED TITLES
@@ -1490,7 +1490,7 @@ with tab3:
 
                         if len(available_titles3) == 0:
                             st.session_state.recommended_titles = []
-                            available_titles5 = candidate_titles3
+                            available_titles3 = candidate_titles3
 
                         # --------------------------------
                         # RANDOMLY CHOOSE A NEW TITLE
@@ -1745,12 +1745,12 @@ with tab4:
 
                         similarity4 = SequenceMatcher(
                             None,
-                            original_search6,
+                            original_search4,
                             result_name4
                         ).ratio()
 
-                        if similarity4 > best_similarity6:
-                            best_similarity4 = similarity6
+                        if similarity4 > best_similarity4:
+                            best_similarity4 = similarity4
 
                     # ----------------------------------------
                     # TYPO FALLBACK
@@ -1785,7 +1785,7 @@ with tab4:
 
                         fallback_params4 = {
                             "search_value": fallback_search4,
-                            "search_type": search_type6
+                            "search_type": search_type4
                         }
 
                         # ------------------------------------
@@ -1796,11 +1796,11 @@ with tab4:
                         fallback_response4 = requests.get(
                             autocomplete_url4,
                             headers=headers,
-                            params=fallback_params6,
+                            params=fallback_params4,
                             timeout=10
                         )
 
-                        fallback_response6.raise_for_status()
+                        fallback_response4.raise_for_status()
 
                         fallback_data4 = (
                             fallback_response4.json()
@@ -1951,7 +1951,7 @@ with tab4:
     # SHOW SEARCH RESULTS
     # ------------------------------------------------
 
-    if st.session_state.watch_results6:
+    if st.session_state.watch_results4:
 
         # Only show old results if search text
         # and media type have not changed
@@ -1983,7 +1983,7 @@ with tab4:
             # CREATE NICE SELECTBOX TEXT
             # ----------------------------------------
 
-            def format_title6(result):
+            def format_title4(result):
 
                 name4 = result.get(
                     "name",
@@ -2145,7 +2145,7 @@ with tab4:
 
                         if poster4:
                             st.image(
-                                poster6,
+                                poster4,
                                 use_container_width=True
                             )
 
@@ -2256,7 +2256,7 @@ with tab4:
                         "📺 Find Where To Watch",
                         type="primary",
                         use_container_width=True,
-                        key="find_sources_button6"
+                        key="find_sources_button4"
                     )
 
                     if find_sources_button4:
@@ -2415,7 +2415,7 @@ with tab5:
 
 #/Plot of Selected Genres in each service#/
 #/
-    st.subheader("Choose the Genres that interest you:")
+    st.subheader("Choose the Genres that interest you (Max. 5):")
     genres_df = pd.read_csv("generes.csv")
 
     genre_list = genres_df["name"].tolist()
@@ -2490,75 +2490,126 @@ with tab5:
                             index=None,
                             placeholder="Select genre"
                         )
-    if st.button(
-            "Show Services with these genres",
-            key="show_genre_stats"
-    ):
+
+        button_col1, button_col2, button_col3 = st.columns(3)
+
+        with button_col1:
+            show_services = st.button(
+                "📊 Compare Services",
+                key="show_genre_Services",
+                use_container_width=True
+            )
+
+        with button_col2:
+            show_content_years = st.button(
+                "📈 Content Over the Years",
+                key="show_content_years",
+                use_container_width=True
+            )
+
+        with button_col3:
+            show_popularity = st.button(
+                "⭐ Popularity Over the Years",
+                key="show_popularity_years",
+                use_container_width=True
+            )
+
+        # ---------------------------------------------------------
+        # CHECK THAT COUNTRY + A Genre was SELECTED
+        # ---------------------------------------------------------
+
+        selected_genres = [
+            genre
+            for genre in [
+                genre1,
+                genre2,
+                genre3,
+                genre4,
+                genre5
+            ]
+            if genre is not None
+        ]
+
+        genre_dict = dict(
+            zip(genres_df["name"], genres_df["id"])
+        )
+
+        # =========================================================
+        # BUTTON 1:
+        # COMPARE THE 5 GENRES BETWEEN 3 MAJOR SERVICES
+        # =========================================================
+
+        if show_services:
+
+            if country_genre is None:
+                st.error("Please select a country.")
 
 
-        if None in [
-            genre1,
-            genre2,
-            genre3,
-            genre4,
-            genre5
-        ]:
+            elif len(selected_genres) == 0:
+                st.error("Please select at least one genre.")
 
-            st.error("Please select all 5 genres.")
+            else:
 
-        else:
+                with st.spinner("Loading your genre data..."):
 
-            with st.spinner("Loading your genre data..."):
+                    results = []
 
-                selected_genres = [
-                    genre1,
-                    genre2,
-                    genre3,
-                    genre4,
-                    genre5
-                ]
+                    # ---------------------------------------------
+                    # Only use Netflix, Prime Video and Disney+
+                    # ---------------------------------------------
 
-                genre_dict = dict(
-                    zip(genres_df["name"], genres_df["id"])
-                )
-                results = []
+                    major_services = common_services[
+                        common_services["name"].str.contains(
+                            r"Netflix|Prime Video|Amazon Prime|Disney\+",
+                            case=False,
+                            na=False,
+                            regex=True
+                        )
+                    ].copy()
 
-                for _, service_row in common_services.iterrows():
+                    # Prevent accidentally getting several versions
+                    # of the same service
+                    major_services = major_services.drop_duplicates(
+                        subset="name"
+                    )
 
-                    source_id = service_row["id"]
-                    service_name = service_row["name"]
+                    for _, service_row in major_services.iterrows():
+
+                        source_id = service_row["id"]
+                        service_name = service_row["name"]
 
                         # Check every selected genre
-                    for genre_name in selected_genres:
+                        for genre_name in selected_genres:
 
-                        genre_id = genre_dict[genre_name]
+                            genre_id = genre_dict[genre_name]
 
-                        params = {
+                            params = {
                                 "regions": selected_region,
                                 "source_ids": source_id,
                                 "genres": genre_id,
                                 "types": "movie,tv_series",
                                 "limit": 1
-                        }
+                            }
 
-                        response = requests.get(
+                            response = requests.get(
                                 urltitles,
                                 headers=headers,
-                                params=params
+                                params=params,
+                                timeout=10
                             )
 
-                        if response.status_code == 200:
+                            if response.status_code == 200:
 
-                            data = response.json()
+                                data = response.json()
 
-                            results.append({
+                                results.append({
                                     "Service": service_name,
                                     "Country": country_genre,
                                     "Genre": genre_name,
                                     "Titles": data["total_results"]
                                 })
 
-                        else:
+                            else:
 
                                 st.warning(
                                     f"Could not get "
@@ -2567,22 +2618,244 @@ with tab5:
                                     f"{country_genre}"
                                 )
 
-                genre_counts = pd.DataFrame(results)
+                    genre_counts = pd.DataFrame(results)
 
-                genre_counts = genre_counts[genre_counts["Titles"] >= 30]
+                    if genre_counts.empty:
 
-                figGenres = px.bar(
-                    genre_counts,
-                    x="Service",
-                    y="Titles",
-                    color="Service",
-                    facet_col="Genre",
-                    facet_col_wrap=3,
-                    title=f"Genre Availability by Streaming Service - {country_genre}",
-                    labels={
-                        "Titles": "Number of Titles",
-                        "Service": "Streaming Service"
-                    }
+                        st.warning("No genre statistics were found.")
+
+                    else:
+
+                        genre_counts = genre_counts[
+                            genre_counts["Titles"] >= 30
+                            ]
+
+                        figGenres = px.bar(
+                            genre_counts,
+                            x="Service",
+                            y="Titles",
+                            color="Service",
+                            facet_col="Genre",
+                            facet_col_wrap=3,
+                            title=(
+                                f"Genre Availability by Streaming Service "
+                                f"- {country_genre}"
+                            ),
+                            labels={
+                                "Titles": "Number of Titles",
+                                "Service": "Streaming Service"
+                            }
+                        )
+
+                        show_genre_plot(figGenres)
+
+        # =========================================================
+        # CREATE / SAVE DATA FOR THE TWO YEAR-BASED GRAPHS
+        # =========================================================
+
+        if show_content_years or show_popularity:
+
+            if country_genre is None:
+                st.error("Please select a country.")
+
+
+            elif len(selected_genres) == 0:
+                st.error("Please select at least one genre.")
+
+            else:
+
+                # This key represents the user's current selections.
+                # If the country or genres change, new API data is needed.
+                current_stats_key = (
+                    country_genre,
+                    tuple(selected_genres)
                 )
 
-                show_genre_plot(figGenres)
+                # Check whether we already downloaded this exact data
+                if (
+                        "genre_year_data" not in st.session_state
+                        or "genre_year_key" not in st.session_state
+                        or st.session_state["genre_year_key"] != current_stats_key
+                ):
+
+                    with st.spinner("Loading genre history..."):
+
+                        year_results = []
+
+                        # -----------------------------------------
+                        # One API request per genre
+                        # -----------------------------------------
+
+                        for genre_name in selected_genres:
+
+                            genre_id = genre_dict[genre_name]
+
+                            params = {
+                                "regions": selected_region,
+                                "genres": genre_id,
+                                "types": "movie,tv_series",
+                                "limit": 250
+                            }
+
+                            try:
+
+                                response = requests.get(
+                                    urltitles,
+                                    headers=headers,
+                                    params=params,
+                                    timeout=10
+                                )
+
+                                response.raise_for_status()
+
+                                data = response.json()
+
+                                titles = data.get("titles", [])
+
+                                for title in titles:
+
+                                    year = title.get("year")
+
+                                    popularity = title.get(
+                                        "popularity_percentile"
+                                    )
+
+                                    if year is not None:
+                                        year_results.append({
+                                            "Genre": genre_name,
+                                            "Year": year,
+                                            "Popularity": popularity
+                                        })
+
+                            except requests.exceptions.RequestException as error:
+
+                                st.warning(
+                                    f"Could not load "
+                                    f"{genre_name}: {error}"
+                                )
+
+                        genre_year_data = pd.DataFrame(year_results)
+
+                        # Save it so the second graph does not
+                        # request the same API data again
+                        st.session_state["genre_year_data"] = genre_year_data
+                        st.session_state["genre_year_key"] = current_stats_key
+
+                else:
+
+                    # Use data already downloaded
+                    genre_year_data = st.session_state[
+                        "genre_year_data"
+                    ]
+
+                # =================================================
+                # BUTTON 2:
+                # CONTENT COUNT OVER THE YEARS
+                # =================================================
+
+                if show_content_years:
+
+                    if genre_year_data.empty:
+
+                        st.warning(
+                            "No historical genre data was found."
+                        )
+
+                    else:
+
+                        content_over_years = (
+                            genre_year_data
+                            .groupby(
+                                ["Year", "Genre"]
+                            )
+                            .size()
+                            .reset_index(
+                                name="Titles"
+                            )
+                        )
+
+                        content_over_years = (
+                            content_over_years
+                            .sort_values("Year")
+                        )
+
+                        figYears = px.line(
+                            content_over_years,
+                            x="Year",
+                            y="Titles",
+                            color="Genre",
+                            markers=True,
+                            title=(
+                                f"Content Released Over the Years "
+                                f"- {country_genre}"
+                            ),
+                            labels={
+                                "Titles": "Number of Titles",
+                                "Year": "Release Year"
+                            }
+                        )
+
+                        show_genre_plot(figYears)
+
+                # =================================================
+                # BUTTON 3:
+                # POPULARITY OVER THE YEARS
+                # =================================================
+
+                if show_popularity:
+
+                    if genre_year_data.empty:
+
+                        st.warning(
+                            "No historical genre data was found."
+                        )
+
+                    else:
+
+                        # Remove rows where Watchmode did not
+                        # provide a popularity value
+                        popularity_data = genre_year_data.dropna(
+                            subset=["Popularity"]
+                        )
+
+                        if popularity_data.empty:
+
+                            st.warning(
+                                "No popularity data was available."
+                            )
+
+                        else:
+
+                            popularity_over_years = (
+                                popularity_data
+                                .groupby(
+                                    ["Year", "Genre"],
+                                    as_index=False
+                                )["Popularity"]
+                                .mean()
+                            )
+
+                            popularity_over_years = (
+                                popularity_over_years
+                                .sort_values("Year")
+                            )
+
+                            figPopularity = px.line(
+                                popularity_over_years,
+                                x="Year",
+                                y="Popularity",
+                                color="Genre",
+                                markers=True,
+                                title=(
+                                    f"Genre Popularity Over the Years "
+                                    f"- {country_genre}"
+                                ),
+                                labels={
+                                    "Popularity":
+                                        "Average Popularity Percentile",
+                                    "Year":
+                                        "Release Year"
+                                }
+                            )
+
+                            show_genre_plot(figPopularity)
