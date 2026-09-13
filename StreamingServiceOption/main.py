@@ -9,7 +9,7 @@ import seaborn as sns
 import base64
 import streamlit as st
 import random
-
+from difflib import SequenceMatcher
 
 def get_base64_image(image_path):
     with open(image_path, "rb") as image_file:
@@ -603,6 +603,31 @@ MediaTypes = {
 genres = pd.read_csv("generes.csv")
 genre_dict = dict(zip(genres["id"], genres["name"]))
 
+language_codes = {
+    "en": "English",
+    "es": "Spanish",
+    "fr": "French",
+    "de": "German",
+    "it": "Italian",
+    "pt": "Portuguese",
+    "he": "Hebrew",
+    "ar": "Arabic",
+    "ja": "Japanese",
+    "ko": "Korean",
+    "zh": "Chinese",
+    "ru": "Russian",
+    "hi": "Hindi",
+    "nl": "Dutch",
+    "sv": "Swedish",
+    "da": "Danish",
+    "no": "Norwegian",
+    "fi": "Finnish",
+    "pl": "Polish",
+    "tr": "Turkish"
+}
+
+
+
 @st.dialog("Title Details", width="medium")
 def show_title_details(title_id):
 
@@ -660,6 +685,172 @@ def show_title_details(title_id):
             "No plot information available."
         )
     )
+
+@st.dialog("📺 Where Can I Watch This?", width="medium")
+def show_watch_options(title_info, sources, country_name):
+
+    # -----------------------------
+    # TITLE
+    # -----------------------------
+
+    st.markdown(
+        f"## {title_info.get('name', 'Unknown Title')}"
+    )
+
+    year = title_info.get("year")
+    media_type = title_info.get("type", "")
+
+    if media_type == "movie":
+        type_text = "🎬 Movie"
+    elif media_type == "tv_series":
+        type_text = "📺 TV Series"
+    else:
+        type_text = media_type
+
+    info_col1, info_col2 = st.columns(2)
+
+    with info_col1:
+        st.caption(type_text)
+
+    with info_col2:
+        if year:
+            st.caption(f"📅 {year}")
+
+    st.divider()
+
+    st.markdown(
+        f"### 🇮🇱 Available in {country_name}"
+        if country_name == "Israel"
+        else f"### Available in {country_name}"
+    )
+
+    # -----------------------------
+    # NO OPTIONS
+    # -----------------------------
+
+    if not sources:
+
+        st.info(
+            "No streaming options were found "
+            f"in {country_name}."
+        )
+
+        return
+
+    # -----------------------------
+    # GROUP SOURCES
+    # -----------------------------
+
+    subscription = []
+    free_sources = []
+    rent_sources = []
+    buy_sources = []
+
+    for source in sources:
+
+        source_type = source.get("type")
+
+        if source_type == "sub":
+            subscription.append(source)
+
+        elif source_type == "free":
+            free_sources.append(source)
+
+        elif source_type == "rent":
+            rent_sources.append(source)
+
+        elif source_type == "buy":
+            buy_sources.append(source)
+
+    # -----------------------------
+    # SUBSCRIPTION
+    # -----------------------------
+
+    if subscription:
+
+        st.markdown("#### 🍿 Subscription")
+
+        for source in subscription:
+
+            source_name = source.get(
+                "name",
+                "Unknown Service"
+            )
+
+            st.success(
+                f"📺 {source_name}"
+            )
+
+    # -----------------------------
+    # FREE
+    # -----------------------------
+
+    if free_sources:
+
+        st.markdown("#### 🆓 Free")
+
+        for source in free_sources:
+
+            source_name = source.get(
+                "name",
+                "Unknown Service"
+            )
+
+            st.info(
+                f"▶️ {source_name}"
+            )
+
+    # -----------------------------
+    # RENT
+    # -----------------------------
+
+    if rent_sources:
+
+        st.markdown("#### 💳 Rent")
+
+        for source in rent_sources:
+
+            source_name = source.get(
+                "name",
+                "Unknown Service"
+            )
+
+            price = source.get("price")
+
+            if price:
+                st.write(
+                    f"🎞️ **{source_name}** — {price}"
+                )
+            else:
+                st.write(
+                    f"🎞️ **{source_name}**"
+                )
+
+    # -----------------------------
+    # BUY
+    # -----------------------------
+
+    if buy_sources:
+
+        st.markdown("#### 🛒 Buy")
+
+        for source in buy_sources:
+
+            source_name = source.get(
+                "name",
+                "Unknown Service"
+            )
+
+            price = source.get("price")
+
+            if price:
+                st.write(
+                    f"🛍️ **{source_name}** — {price}"
+                )
+            else:
+                st.write(
+                    f"🛍️ **{source_name}**"
+                )
 
 @st.dialog("🎬 Here is a Movie You might like:", width="large")
 def show_random_movie(movie):
@@ -719,10 +910,17 @@ def show_random_movie(movie):
             "**US Rating:**",
             movie.get("us_rating", "N/A")
         )
+#/Converts languge code to be more understandable#/
+        original_language = movie.get("original_language")
+
+        language_name = language_codes.get(
+            original_language,
+            original_language
+        )
 
         st.write(
             "**Original Language:**",
-            movie.get("original_language", "N/A")
+            language_name if language_name else "N/A"
         )
 
     st.subheader("Overview")
@@ -741,7 +939,6 @@ urltitles = "https://api.watchmode.com/v1/list-titles"
 License = "Proprietary"
 headers = {"X-API-Key": API_KEY}
 
-
 sources = pd.read_csv("sources.csv")
 
 common_services = sources[
@@ -750,18 +947,17 @@ common_services = sources[
     sources["regions"].str.contains("IL", na=False)
     ]
 
-##Website Section#
-
 st.set_page_config(page_title="Streamer Guide",page_icon="📺",layout="centered")
 st.title("▶️Streaming Watch Guide", wrap=True)
 st.caption("Find what to watch. Know where to watch it.")
 
 import streamlit as st
 
-tab1, tab2, tab3, tab4 = st.tabs([
+tab1, tab2, tab3, tab4, tab5 = st.tabs([
     "🍿 AVAILABLE IN MY SERVICE",
     "📺 TV SHOW EPISODE GUIDE",
-    "🎬 FIND ME A MOVIE TO WATCH",
+    "🎯 FIND ME SOMETHING TO WATCH",
+    "🔎 WHERE IS THIS SHOW/MOVIE?",
     "📊 STATISTICS"
 ])
 
@@ -1051,172 +1247,1090 @@ with tab2:
                             )
 
 with tab3:
+    st.header("What Should I Watch?")
 
-        st.header("Random Movie Recommendation")
+    st.write(
+        "Tell us what you're in the mood for, "
+        "and we'll recommend something for you!"
+    )
 
-        st.write(
-            "Choose a release year range and genre, "
-            "and we'll pick a random movie for you to watch"
-        )
+    # --------------------------------
+    # MEDIA TYPE
+    # --------------------------------
 
-        # Create the genre list from your existing genres DataFrame
-        genre_list = genres["name"].tolist()
+    media_select5 = st.radio(
+        "What would you like to watch?",
+        list(MediaTypes.keys()),
+        horizontal=True,
+        index=None,
+        key="recommend_media_type"
+    )
 
-        # -------------------------
-        # YEAR RANGE
-        # -------------------------
+    # --------------------------------
+    # COUNTRY
+    # --------------------------------
 
-        year_range = st.slider(
-            "Choose release year range:",
-            min_value=1950,
-            max_value=2026,
-            value=(2000, 2026),
-            key="random_movie_years"
-        )
+    country5 = st.radio(
+        "Where are you watching from?",
+        list(country_codes.keys()),
+        horizontal=True,
+        index=None,
+        format_func=lambda x: {
+            "Israel": "Israel",
+            "USA": "USA",
+            "Spain": "Spain"
+        }[x],
+        key="recommend_country"
+    )
 
-        start_year = year_range[0]
-        end_year = year_range[1]
+    # --------------------------------
+    # GENRE
+    # --------------------------------
 
-        # -------------------------
-        # GENRE
-        # -------------------------
+    genre5 = st.selectbox(
+        "What genre are you in the mood for?",
+        genres["name"].tolist(),
+        index=None,
+        placeholder="Choose a genre",
+        key="recommend_genre"
+    )
 
-        selected_genre = st.selectbox(
-            "Choose genre:",
-            genre_list,
+    # --------------------------------
+    # RELEASE YEAR
+    # --------------------------------
+
+    year_range5 = st.slider(
+        "Choose a release year range:",
+        min_value=1950,
+        max_value=2026,
+        value=(2000, 2026),
+        key="recommend_year"
+    )
+
+    # --------------------------------
+    # STREAMING SERVICE
+    # --------------------------------
+
+    service5 = None
+    services5 = None
+    country_code5 = None
+
+    if country5 is not None:
+        country_code5 = country_codes[country5]
+
+        sources5 = pd.read_csv("sources.csv")
+
+        services5 = sources5[
+            sources5["regions"].str.contains(
+                country_code5,
+                na=False
+            )
+        ]
+
+        service5 = st.selectbox(
+            "Choose your streaming service:",
+            services5["name"].unique(),
             index=None,
-            placeholder="Select genre",
-            key="random_movie_genre"
+            placeholder="Choose a streaming service",
+            key="recommend_service"
         )
 
-        # -------------------------
-        # RANDOM MOVIE BUTTON
-        # -------------------------
+    # --------------------------------
+    # BUTTON
+    # --------------------------------
 
-        if st.button(
-                "🎲 Pick a Random Movie",
-                use_container_width=True,
-                key="random_movie_button"
-        ):
+    if st.button(
+            "🎯 Find Something For Me",
+            type="primary",
+            use_container_width=True,
+            key="recommend_button"
+    ):
 
-            if selected_genre is None:
+        # --------------------------------
+        # CHECK USER INPUT
+        # --------------------------------
 
-                st.error("Please select a genre.")
+        if media_select5 is None:
 
-            else:
+            st.warning(
+                "Please choose Movie or TV Series."
+            )
 
-                with st.spinner("Finding a movie..."):
+        elif country5 is None:
 
-                    genre_id = int(
-                        genres.loc[
-                            genres["name"] == selected_genre,
-                            "id"
-                        ].iloc[0]
+            st.warning(
+                "Please choose a country."
+            )
+
+        elif genre5 is None:
+
+            st.warning(
+                "Please choose a genre."
+            )
+
+        elif service5 is None:
+
+            st.warning(
+                "Please choose a streaming service."
+            )
+
+        else:
+
+            with st.spinner(
+                    "🍿 Searching for something you might like..."
+            ):
+
+                try:
+
+                    # --------------------------------
+                    # CONVERT MEDIA TYPE
+                    # Movie -> movie
+                    # TV Series -> tv_series
+                    # --------------------------------
+
+                    media_type5 = MediaTypes[
+                        media_select5
+                    ]
+
+                    # --------------------------------
+                    # GET GENRE ID
+                    # --------------------------------
+
+                    genre_id5 = genres.loc[
+                        genres["name"] == genre5,
+                        "id"
+                    ].iloc[0]
+
+                    # --------------------------------
+                    # GET STREAMING SERVICE ID
+                    # --------------------------------
+
+                    source_id5 = services5.loc[
+                        services5["name"] == service5,
+                        "id"
+                    ].iloc[0]
+
+                    # --------------------------------
+                    # API CALL 1
+                    # GET MATCHING TITLES
+                    # --------------------------------
+
+                    url5 = (
+                        "https://api.watchmode.com/"
+                        "v1/list-titles/"
                     )
 
-                    params = {
-                        "types": "movie",
-                        "genres": genre_id,
-                        "release_date_start": f"{start_year}-01-01",
-                        "release_date_end": f"{end_year}-12-31",
+                    params5 = {
+                        "types": media_type5,
+                        "regions": country_code5,
+                        "source_ids": source_id5,
+                        "genres": genre_id5,
+                        "release_date_start": int(
+                            f"{year_range5[0]}0101"
+                        ),
+                        "release_date_end": int(
+                            f"{year_range5[1]}1231"
+                        ),
+                        "sort_by": "popularity_desc",
                         "limit": 250
                     }
 
-                    response = requests.get(
-                        urltitles,
+                    response5 = requests.get(
+                        url5,
                         headers=headers,
-                        params=params
+                        params=params5,
+                        timeout=10
                     )
 
-                    if response.status_code == 200:
+                    response5.raise_for_status()
 
-                        data = response.json()
+                    data5 = response5.json()
 
-                        movies = data.get("titles", [])
+                    titles5 = data5.get(
+                        "titles",
+                        []
+                    )
 
-                        if len(movies) == 0:
+                    # --------------------------------
+                    # NO RESULTS
+                    # --------------------------------
+
+                    if len(titles5) == 0:
+
+                        st.warning(
+                            "No titles were found with "
+                            "those preferences. Try changing "
+                            "the genre, years, or service."
+                        )
+
+                    else:
+
+                        # --------------------------------
+                        # RANDOMLY CHOOSE FROM
+                        # TOP 50 POPULAR RESULTS
+                        # --------------------------------
+
+                        candidate_titles5 = titles5[:50]
+
+                        selected_title5 = random.choice(
+                            candidate_titles5
+                        )
+
+                        title_id5 = selected_title5[
+                            "id"
+                        ]
+
+                        # --------------------------------
+                        # API CALL 2
+                        # GET FULL DETAILS
+                        # --------------------------------
+
+                        details_url5 = (
+                            "https://api.watchmode.com/"
+                            f"v1/title/{title_id5}/details/"
+                        )
+
+                        details_response5 = requests.get(
+                            details_url5,
+                            headers=headers,
+                            timeout=10
+                        )
+
+                        details_response5.raise_for_status()
+
+                        title_details5 = (
+                            details_response5.json()
+                        )
+
+                        # --------------------------------
+                        # SHOW YOUR EXISTING POPUP
+                        # --------------------------------
+
+                        show_random_movie(
+                            title_details5
+                        )
+
+                # --------------------------------
+                # API / INTERNET ERRORS
+                # --------------------------------
+
+                except requests.exceptions.Timeout:
+
+                    st.error(
+                        "The Watchmode API took too long "
+                        "to respond. Please try again."
+                    )
+
+                except requests.exceptions.ConnectionError:
+
+                    st.error(
+                        "Could not connect to Watchmode. "
+                        "Please check your internet or "
+                        "DNS connection."
+                    )
+
+                except requests.exceptions.HTTPError as e:
+
+                    st.error(
+                        f"Watchmode API error: {e}"
+                    )
+
+                except Exception as e:
+
+                    st.error(
+                        f"Something went wrong: {e}"
+                    )
+
+with tab4:
+
+    st.header("Where Can I Watch This?")
+
+    st.write(
+        "Search for a movie or TV series and find out "
+        "where it's available to watch."
+    )
+
+    st.divider()
+
+    # ------------------------------------------------
+    # INITIALIZE SESSION STATE
+    # ------------------------------------------------
+
+    if "watch_results6" not in st.session_state:
+        st.session_state.watch_results6 = []
+
+    if "watch_search6" not in st.session_state:
+        st.session_state.watch_search6 = ""
+
+    if "watch_media6" not in st.session_state:
+        st.session_state.watch_media6 = None
+
+    # ------------------------------------------------
+    # TITLE SEARCH
+    # ------------------------------------------------
+
+    search_title6 = st.text_input(
+        "🎬 Movie or TV Show Name",
+        placeholder="Example: Twilight",
+        key="watch_search_title"
+    )
+
+    # ------------------------------------------------
+    # MEDIA TYPE
+    # ------------------------------------------------
+
+    media_select6 = st.radio(
+        "What are you looking for?",
+        list(MediaTypes.keys()),
+        horizontal=True,
+        index=None,
+        key="watch_media_type"
+    )
+
+    # ------------------------------------------------
+    # COUNTRY
+    # ------------------------------------------------
+
+    country6 = st.radio(
+        "Where are you watching from?",
+        list(country_codes.keys()),
+        horizontal=True,
+        index=None,
+        format_func=lambda x: {
+            "Israel": "🇮🇱 Israel",
+            "USA": "🇺🇸 USA",
+            "Spain": "🇪🇸 Spain"
+        }[x],
+        key="watch_country"
+    )
+
+    st.write("")
+
+    # ------------------------------------------------
+    # SEARCH BUTTON
+    # ------------------------------------------------
+
+    search_button6 = st.button(
+        "🔎 Search For Title",
+        type="primary",
+        use_container_width=True,
+        key="watch_search_button"
+    )
+
+    if search_button6:
+
+        if not search_title6.strip():
+
+            st.warning(
+                "Please enter a movie or TV show name."
+            )
+
+        elif media_select6 is None:
+
+            st.warning(
+                "Please choose Movie or TV Series."
+            )
+
+        else:
+
+            with st.spinner(
+                    "🔎 Searching for matching titles..."
+            ):
+
+                try:
+
+                    # ----------------------------------------
+                    # WATCHMODE SEARCH TYPE
+                    #
+                    # 3 = Movies only
+                    # 4 = TV shows only
+                    # ----------------------------------------
+
+                    if media_select6 == "Movie":
+                        search_type6 = 3
+                    else:
+                        search_type6 = 4
+
+                    autocomplete_url6 = (
+                        "https://api.watchmode.com/"
+                        "v1/autocomplete-search/"
+                    )
+
+                    autocomplete_params6 = {
+                        "search_value": search_title6.strip(),
+                        "search_type": search_type6
+                    }
+
+                    # ----------------------------------------
+                    # API CALL 1
+                    # NORMAL AUTOCOMPLETE SEARCH
+                    # ----------------------------------------
+
+                    autocomplete_response6 = requests.get(
+                        autocomplete_url6,
+                        headers=headers,
+                        params=autocomplete_params6,
+                        timeout=10
+                    )
+
+                    autocomplete_response6.raise_for_status()
+
+                    autocomplete_data6 = (
+                        autocomplete_response6.json()
+                    )
+
+                    results6 = autocomplete_data6.get(
+                        "results",
+                        []
+                    )
+
+                    # ----------------------------------------
+                    # ONLY KEEP TITLES
+                    # ----------------------------------------
+
+                    results6 = [
+                        result
+                        for result in results6
+                        if result.get("result_type") == "title"
+                    ]
+
+                    # ----------------------------------------
+                    # CHECK HOW SIMILAR RESULTS ARE
+                    # TO WHAT USER ENTERED
+                    # ----------------------------------------
+
+                    original_search6 = (
+                        search_title6.strip().lower()
+                    )
+
+                    best_similarity6 = 0
+
+                    for result in results6:
+
+                        result_name6 = (
+                            result.get("name", "")
+                            .lower()
+                        )
+
+                        similarity6 = SequenceMatcher(
+                            None,
+                            original_search6,
+                            result_name6
+                        ).ratio()
+
+                        if similarity6 > best_similarity6:
+                            best_similarity6 = similarity6
+
+                    # ----------------------------------------
+                    # TYPO FALLBACK
+                    #
+                    # If no useful results were returned,
+                    # search again using the beginning
+                    # of what the user typed.
+                    # ----------------------------------------
+
+                    if (
+                            len(results6) == 0
+                            or best_similarity6 < 0.55
+                    ):
+
+                        cleaned_search6 = (
+                            search_title6
+                            .strip()
+                        )
+
+                        # Use first 3-4 characters
+                        # for fallback autocomplete
+
+                        if len(cleaned_search6) >= 4:
+                            fallback_search6 = (
+                                cleaned_search6[:4]
+                            )
+
+                        else:
+                            fallback_search6 = (
+                                cleaned_search6
+                            )
+
+                        fallback_params6 = {
+                            "search_value": fallback_search6,
+                            "search_type": search_type6
+                        }
+
+                        # ------------------------------------
+                        # OPTIONAL API CALL 2
+                        # ONLY USED FOR POSSIBLE MISSPELLING
+                        # ------------------------------------
+
+                        fallback_response6 = requests.get(
+                            autocomplete_url6,
+                            headers=headers,
+                            params=fallback_params6,
+                            timeout=10
+                        )
+
+                        fallback_response6.raise_for_status()
+
+                        fallback_data6 = (
+                            fallback_response6.json()
+                        )
+
+                        fallback_results6 = (
+                            fallback_data6.get(
+                                "results",
+                                []
+                            )
+                        )
+
+                        fallback_results6 = [
+                            result
+                            for result
+                            in fallback_results6
+                            if result.get(
+                                "result_type"
+                            ) == "title"
+                        ]
+
+                        # Add fallback results
+                        # to original results
+
+                        results6.extend(
+                            fallback_results6
+                        )
+
+                    # ----------------------------------------
+                    # REMOVE DUPLICATES
+                    # ----------------------------------------
+
+                    unique_results6 = {}
+
+                    for result in results6:
+
+                        result_id6 = result.get("id")
+
+                        if result_id6 is not None:
+                            unique_results6[
+                                result_id6
+                            ] = result
+
+                    results6 = list(
+                        unique_results6.values()
+                    )
+
+                    # ----------------------------------------
+                    # FUZZY MATCH SCORE
+                    #
+                    # Compare user's text to each title.
+                    # ----------------------------------------
+
+                    for result in results6:
+                        result_name6 = (
+                            result.get(
+                                "name",
+                                ""
+                            ).lower()
+                        )
+
+                        fuzzy_score6 = SequenceMatcher(
+                            None,
+                            original_search6,
+                            result_name6
+                        ).ratio()
+
+                        result[
+                            "fuzzy_score"
+                        ] = fuzzy_score6
+
+                    # ----------------------------------------
+                    # SORT BEST MATCHES FIRST
+                    # ----------------------------------------
+
+                    results6 = sorted(
+                        results6,
+                        key=lambda x: (
+                            x.get(
+                                "fuzzy_score",
+                                0
+                            ),
+                            x.get(
+                                "relevance",
+                                0
+                            )
+                        ),
+                        reverse=True
+                    )
+
+                    # Keep a reasonable amount
+                    # of suggestions
+
+                    results6 = results6[:10]
+
+                    # ----------------------------------------
+                    # SAVE RESULTS
+                    # ----------------------------------------
+
+                    st.session_state.watch_results6 = (
+                        results6
+                    )
+
+                    st.session_state.watch_search6 = (
+                        search_title6
+                    )
+
+                    st.session_state.watch_media6 = (
+                        media_select6
+                    )
+
+                    if len(results6) == 0:
+                        st.warning(
+                            "We couldn't find anything "
+                            "similar to that title. "
+                            "Try another spelling or "
+                            "a shorter version of the name."
+                        )
+
+                except requests.exceptions.Timeout:
+
+                    st.error(
+                        "The Watchmode API took too long "
+                        "to respond. Please try again."
+                    )
+
+                except requests.exceptions.ConnectionError:
+
+                    st.error(
+                        "Could not connect to Watchmode. "
+                        "Please check your internet or "
+                        "DNS connection."
+                    )
+
+                except requests.exceptions.HTTPError as e:
+
+                    st.error(
+                        f"Watchmode API error: {e}"
+                    )
+
+                except Exception as e:
+
+                    st.error(
+                        f"Something went wrong: {e}"
+                    )
+
+    # ------------------------------------------------
+    # SHOW SEARCH RESULTS
+    # ------------------------------------------------
+
+    if st.session_state.watch_results6:
+
+        # Only show old results if search text
+        # and media type have not changed
+
+        if (
+                search_title6
+                == st.session_state.watch_search6
+                and media_select6
+                == st.session_state.watch_media6
+        ):
+
+            st.divider()
+
+            st.subheader(
+                "🎬 Which title did you mean?"
+            )
+
+            st.caption(
+                "Choose the correct title from the "
+                "matching results below."
+            )
+
+            results6 = (
+                st.session_state.watch_results6
+            )
+
+
+            # ----------------------------------------
+            # CREATE NICE SELECTBOX TEXT
+            # ----------------------------------------
+
+            def format_title6(result):
+
+                name6 = result.get(
+                    "name",
+                    "Unknown Title"
+                )
+
+                year6 = result.get(
+                    "year"
+                )
+
+                result_type6 = result.get(
+                    "type",
+                    ""
+                )
+
+                if result_type6 == "movie":
+                    icon6 = "🎬"
+
+                elif result_type6 == "tv_series":
+                    icon6 = "📺"
+
+                else:
+                    icon6 = "🎞️"
+
+                if year6:
+                    return (
+                        f"{icon6} "
+                        f"{name6} ({year6})"
+                    )
+
+                return (
+                    f"{icon6} {name6}"
+                )
+
+
+            selected_title6 = st.selectbox(
+                "Select a title:",
+                results6,
+                format_func=format_title6,
+                index=None,
+                placeholder="Choose the correct title",
+                key="selected_watch_title6"
+            )
+
+            # ----------------------------------------
+            # SHOW SELECTED TITLE INFORMATION
+            # ----------------------------------------
+
+            if selected_title6 is not None:
+
+                title_id6 = selected_title6["id"]
+
+                # ----------------------------------------
+                # CHECK IF WE ALREADY LOADED DETAILS
+                # ----------------------------------------
+
+                if "title_details6" not in st.session_state:
+                    st.session_state.title_details6 = None
+
+                if "title_details_id6" not in st.session_state:
+                    st.session_state.title_details_id6 = None
+
+                # ----------------------------------------
+                # ONLY CALL DETAILS API IF USER
+                # SELECTED A DIFFERENT TITLE
+                # ----------------------------------------
+
+                if st.session_state.title_details_id6 != title_id6:
+
+                    with st.spinner(
+                            "🎬 Loading title details..."
+                    ):
+
+                        try:
+
+                            details_url6 = (
+                                "https://api.watchmode.com/"
+                                f"v1/title/{title_id6}/details/"
+                            )
+
+                            details_response6 = requests.get(
+                                details_url6,
+                                headers=headers,
+                                timeout=10
+                            )
+
+                            details_response6.raise_for_status()
+
+                            st.session_state.title_details6 = (
+                                details_response6.json()
+                            )
+
+                            st.session_state.title_details_id6 = (
+                                title_id6
+                            )
+
+                        except requests.exceptions.Timeout:
+
+                            st.error(
+                                "The title details took too long "
+                                "to load."
+                            )
+
+                        except requests.exceptions.ConnectionError:
+
+                            st.error(
+                                "Could not connect to Watchmode."
+                            )
+
+                        except requests.exceptions.HTTPError as e:
+
+                            st.error(
+                                f"Watchmode API error: {e}"
+                            )
+
+                        except Exception as e:
+
+                            st.error(
+                                f"Something went wrong: {e}"
+                            )
+
+                # ----------------------------------------
+                # DISPLAY DETAILS
+                # ----------------------------------------
+
+                movie_details6 = (
+                    st.session_state.title_details6
+                )
+
+                if movie_details6:
+
+                    st.divider()
+
+                    poster_col6, details_col6 = (
+                        st.columns([1, 2])
+                    )
+
+                    # ------------------------------------
+                    # POSTER
+                    # ------------------------------------
+
+                    with poster_col6:
+
+                        poster6 = movie_details6.get(
+                            "posterLarge"
+                        )
+
+                        if not poster6:
+                            poster6 = movie_details6.get(
+                                "poster"
+                            )
+
+                        # fallback to autocomplete image
+
+                        if not poster6:
+                            poster6 = selected_title6.get(
+                                "image_url"
+                            )
+
+                        if poster6:
+                            st.image(
+                                poster6,
+                                use_container_width=True
+                            )
+
+                    # ------------------------------------
+                    # DETAILS
+                    # ------------------------------------
+
+                    with details_col6:
+
+                        st.subheader(
+                            movie_details6.get(
+                                "title",
+                                selected_title6.get(
+                                    "name",
+                                    "Unknown Title"
+                                )
+                            )
+                        )
+
+                        year6 = movie_details6.get(
+                            "year"
+                        )
+
+                        runtime6 = movie_details6.get(
+                            "runtime_minutes"
+                        )
+
+                        user_rating6 = movie_details6.get(
+                            "user_rating"
+                        )
+
+                        critic_score6 = movie_details6.get(
+                            "critic_score"
+                        )
+
+                        genre_names6 = movie_details6.get(
+                            "genre_names",
+                            []
+                        )
+
+                        st.write(
+                            "**📅 Year:**",
+                            year6 if year6 else "N/A"
+                        )
+
+                        if genre_names6:
+                            st.write(
+                                "**🎭 Genres:**",
+                                ", ".join(genre_names6)
+                            )
+
+                        st.write(
+                            "**⏱️ Runtime:**",
+                            (
+                                f"{runtime6} minutes"
+                                if runtime6
+                                else "N/A"
+                            )
+                        )
+
+                        st.write(
+                            "**⭐ User Rating:**",
+                            (
+                                user_rating6
+                                if user_rating6
+                                else "N/A"
+                            )
+                        )
+
+                        st.write(
+                            "**🍅 Critic Score:**",
+                            (
+                                critic_score6
+                                if critic_score6
+                                else "N/A"
+                            )
+                        )
+
+                    # ------------------------------------
+                    # OVERVIEW
+                    # ------------------------------------
+
+                    st.subheader("📖 Overview")
+
+                    overview6 = movie_details6.get(
+                        "plot_overview"
+                    )
+
+                    if overview6:
+
+                        st.write(
+                            overview6
+                        )
+
+                    else:
+
+                        st.write(
+                            "No overview available."
+                        )
+
+                    st.write("")
+
+                    # ------------------------------------
+                    # AVAILABILITY BUTTON
+                    # ------------------------------------
+
+                    find_sources_button6 = st.button(
+                        "📺 Find Where To Watch",
+                        type="primary",
+                        use_container_width=True,
+                        key="find_sources_button6"
+                    )
+
+                    if find_sources_button6:
+
+                        if country6 is None:
 
                             st.warning(
-                                "No movies were found for these filters."
+                                "Please choose a country."
                             )
 
                         else:
 
-                            previous_movie_id = st.session_state.get(
-                                "previous_random_movie_id"
-                            )
+                            with st.spinner(
+                                    "🍿 Finding streaming services..."
+                            ):
 
-                            available_movies = [
-                                movie
-                                for movie in movies
-                                if movie["id"] != previous_movie_id
-                            ]
+                                try:
 
-                            if available_movies:
+                                    country_code6 = (
+                                        country_codes[
+                                            country6
+                                        ]
+                                    )
 
-                                random_movie = random.choice(
-                                    available_movies
-                                )
+                                    # ----------------------------
+                                    # SOURCES API CALL
+                                    # ----------------------------
 
-                            else:
+                                    sources_url6 = (
+                                        "https://api.watchmode.com/"
+                                        f"v1/title/{title_id6}/"
+                                        "sources/"
+                                    )
 
-                                random_movie = random.choice(
-                                    movies
-                                )
+                                    sources_params6 = {
+                                        "regions":
+                                            country_code6
+                                    }
 
-                            movie_id = random_movie["id"]
+                                    sources_response6 = (
+                                        requests.get(
+                                            sources_url6,
+                                            headers=headers,
+                                            params=sources_params6,
+                                            timeout=10
+                                        )
+                                    )
 
-                            st.session_state[
-                                "previous_random_movie_id"
-                            ] = movie_id
+                                    sources_response6.raise_for_status()
 
-                            details_url = (
-                                f"https://api.watchmode.com/v1/"
-                                f"title/{movie_id}/details/"
-                            )
+                                    watch_sources6 = (
+                                        sources_response6.json()
+                                    )
 
-                            details_response = requests.get(
-                                details_url,
-                                headers=headers
-                            )
+                                    # ----------------------------
+                                    # FILTER COUNTRY
+                                    # ----------------------------
 
-                            if details_response.status_code == 200:
+                                    watch_sources6 = [
+                                        source
+                                        for source
+                                        in watch_sources6
+                                        if source.get(
+                                            "region"
+                                        ) == country_code6
+                                    ]
 
-                                movie = details_response.json()
+                                    # ----------------------------
+                                    # POPUP
+                                    # ----------------------------
 
-                                show_random_movie(movie)
+                                    show_watch_options(
+                                        selected_title6,
+                                        watch_sources6,
+                                        country6
+                                    )
 
-                            else:
+                                except requests.exceptions.Timeout:
 
-                                st.error(
-                                    "Could not load the movie details."
-                                )
+                                    st.error(
+                                        "The Watchmode API took "
+                                        "too long to respond."
+                                    )
 
-                                st.write(
-                                    "Status code:",
-                                    details_response.status_code
-                                )
+                                except requests.exceptions.ConnectionError:
 
-                                st.write(
-                                    details_response.text
-                                )
+                                    st.error(
+                                        "Could not connect to "
+                                        "Watchmode. Please check "
+                                        "your internet or DNS."
+                                    )
 
-                    else:
+                                except requests.exceptions.HTTPError as e:
 
-                        st.error(
-                            "Could not get movies from Watchmode."
-                        )
+                                    st.error(
+                                        f"Watchmode API error: {e}"
+                                    )
 
-                        st.write(
-                            "Status code:",
-                            response.status_code
-                        )
+                                except Exception as e:
 
-                        st.write(
-                            "API response:",
-                            response.text
-                        )
-with tab4:
+                                    st.error(
+                                        f"Something went wrong: {e}"
+                                    )
+
+with tab5:
     st.header("Some Information that will help you decide the service best for you")
 
 #/Plot of Streaming Service Content#/
