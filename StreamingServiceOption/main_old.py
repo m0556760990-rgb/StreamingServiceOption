@@ -303,27 +303,40 @@ def GetTitleAvailabel(title_id):
     title_sources = response.json()
     return(title_sources)
 
+country_codes = {
+    "USA": "US",
+    "Spain": "ES",
+    "Israel": "IL"
+}
+
+MediaTypes = {
+    "Movie": "movie",
+    "TV Show": "tv_series",
+}
+
+#Genre ID Converter
+genres = pd.read_csv("generes.csv")
+genre_dict = dict(zip(genres["id"], genres["name"]))
+
+def show_titles(titles,MediaName):
+    @st.dialog(f"Available {MediaName}", width="large")
+    def dialog():
+        st.dataframe(titles, use_container_width=True)
+    dialog()
+
+@st.dialog("Streaming Content Comparison", width="large")
+def show_statistics_plot(fig):
+    st.plotly_chart(fig, use_container_width=True)
+    
 API_KEY = st.secrets["api_key"]
 urltitles = "https://api.watchmode.com/v1/list-titles"
 
 License = "Proprietary"
 headers = {"X-API-Key": API_KEY}
 
-#ShowGenres(API_KEY)
-
-##getting titles table
-params = {"types": "movie,tv_series","regions": "US","genres":"33,40,2,1,11","page": 1,"limit": 250}
-#df = pd.read_csv("israel_animation.csv")
-#
-# response = requests.get(urltitles,headers=headers,params=params)
-# response.raise_for_status()
-# data = response.json()
-# pd.set_option("display.max_columns", None)
-# df = pd.DataFrame(data["titles"])
 
 
-
- #sources = GetTitleAvailabel(3213685)
+#sources = GetTitleAvailabel(3213685)
 
 # for source in sources:
    # print(source["name"], "-", source["region"])
