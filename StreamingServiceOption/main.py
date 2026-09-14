@@ -937,8 +937,8 @@ if "recommended_titles" not in st.session_state:
     st.session_state.recommended_titles = []
 
 API_KEYS = [
-    st.APIsecrets["API_KEY_1"],
-    st.APIsecrets["API_KEY_2"]
+    st.secrets["API_KEY_1"],
+    st.secrets["API_KEY_2"]
 ]
 
 urltitles = "https://api.watchmode.com/v1/list-titles"
