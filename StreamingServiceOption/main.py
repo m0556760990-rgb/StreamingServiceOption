@@ -9,9 +9,7 @@ import seaborn as sns
 import base64
 import streamlit as st
 import random
-import os
 from difflib import SequenceMatcher
-os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 def get_base64_image(image_path):
     with open(image_path, "rb") as image_file:
@@ -484,17 +482,6 @@ st.markdown(
 
     unsafe_allow_html=True
 )
-#*Function to print all the genres from the API*
-def ShowGenres():
-
-    urlgenres = "https://api.watchmode.com/v1/genres"
-
-    response = watchmode_request(urlgenres)
-
-    genres = response.json()
-
-    for genre in genres:
-        print(genre["id"], "-", genre["name"])
 
 #*Function to get the services that have the title - then we use the Source_id and Region from what we get to tell where the title is available*
 def GetTitleAvailabel(title_id):
@@ -505,7 +492,7 @@ def GetTitleAvailabel(title_id):
 
     return response.json()
 
-#get movie and tv show details#/
+#*get movie and tv show details#/
 def get_title_details(title_id):
 
     url = f"https://api.watchmode.com/v1/title/{title_id}/details/"
@@ -514,6 +501,7 @@ def get_title_details(title_id):
 
     return response.json()
 
+#*popup for plot of content available in every streaming service*#
 @st.dialog("Streaming Content Comparison", width="large")
 def show_statistics_plot(content_counts):
 
@@ -567,7 +555,6 @@ def show_statistics_plot(content_counts):
                     )
 
 #*Function to get the episodes that have the title - then we can return the full list of episodes, their length and more*
-#*add a validation with the API that the title is a tv show*#
 def GetTVShowsEpisodes(title_id):
 
     url = f"https://api.watchmode.com/v1/title/{title_id}/episodes"
@@ -576,6 +563,7 @@ def GetTVShowsEpisodes(title_id):
 
     return response.json()
 
+#function to show each of the 3 plots available for Genres*#
 def show_genre_plot(fig):
 
     @st.dialog("Your Genre Comparison", width="large")
@@ -626,15 +614,13 @@ language_codes = {
 }
 
 
-
+#popup that extract the details for a specific title#
 @st.dialog("Title Details", width="medium")
 def show_title_details(title_id):
 
     details = get_title_details(title_id)
 
-    st.subheader(
-        details.get("title", "Title")
-    )
+    st.subheader(details.get("title", "Title"))
 
     col1, col2 = st.columns([1, 2])
 
@@ -685,12 +671,9 @@ def show_title_details(title_id):
         )
     )
 
+#pop up to show available services for the selected title
 @st.dialog("📺 Where Can I Watch This?", width="medium")
 def show_watch_options(title_info, sources, country_name):
-
-    # -----------------------------
-    # TITLE
-    # -----------------------------
 
     st.markdown(
         f"## {title_info.get('name', 'Unknown Title')}"
@@ -723,10 +706,6 @@ def show_watch_options(title_info, sources, country_name):
         else f"### Available in {country_name}"
     )
 
-    # -----------------------------
-    # NO OPTIONS
-    # -----------------------------
-
     if not sources:
 
         st.info(
@@ -735,10 +714,6 @@ def show_watch_options(title_info, sources, country_name):
         )
 
         return
-
-    # -----------------------------
-    # GROUP SOURCES
-    # -----------------------------
 
     subscription = []
     free_sources = []
@@ -761,10 +736,6 @@ def show_watch_options(title_info, sources, country_name):
         elif source_type == "buy":
             buy_sources.append(source)
 
-    # -----------------------------
-    # SUBSCRIPTION
-    # -----------------------------
-
     if subscription:
 
         st.markdown("#### 🍿 Subscription")
@@ -780,10 +751,6 @@ def show_watch_options(title_info, sources, country_name):
                 f"📺 {source_name}"
             )
 
-    # -----------------------------
-    # FREE
-    # -----------------------------
-
     if free_sources:
 
         st.markdown("#### 🆓 Free")
@@ -798,10 +765,6 @@ def show_watch_options(title_info, sources, country_name):
             st.info(
                 f"▶️ {source_name}"
             )
-
-    # -----------------------------
-    # RENT
-    # -----------------------------
 
     if rent_sources:
 
@@ -825,10 +788,6 @@ def show_watch_options(title_info, sources, country_name):
                     f"🎞️ **{source_name}**"
                 )
 
-    # -----------------------------
-    # BUY
-    # -----------------------------
-
     if buy_sources:
 
         st.markdown("#### 🛒 Buy")
@@ -851,6 +810,7 @@ def show_watch_options(title_info, sources, country_name):
                     f"🛍️ **{source_name}**"
                 )
 
+#Movie Suggestion - Random#
 @st.dialog("🎬 Here is a Movie You might like:", width="large")
 def show_random_movie(movie):
 
@@ -944,7 +904,7 @@ urltitles = "https://api.watchmode.com/v1/list-titles"
 
 License = "Proprietary"
 
-sources = pd.read_csv("Sources.csv")
+sources = pd.read_csv("sources.csv")
 
 common_services = sources[
     sources["regions"].str.contains("US", na=False) &
@@ -952,10 +912,12 @@ common_services = sources[
     sources["regions"].str.contains("IL", na=False)
     ]
 
+#TITLE PAGE#
 st.set_page_config(page_title="Streamer Guide",page_icon="▶️",layout="centered")
 st.title("▶️Streaming Watch Guide", wrap=True)
 st.caption("Find what to watch. Know where to watch it.")
 
+#Access to the API, using 2 Keys and checking we didn't exceed the 250 calls we have#
 def watchmode_request(url, params=None):
 
     for api_key in API_KEYS:
@@ -1288,10 +1250,6 @@ with tab3:
         "and we'll recommend something for you!"
     )
 
-    # --------------------------------
-    # MEDIA TYPE
-    # --------------------------------
-
     media_select3 = st.radio(
         "What would you like to watch?",
         list(MediaTypes.keys()),
@@ -1299,10 +1257,6 @@ with tab3:
         index=None,
         key="recommend_media_type"
     )
-
-    # --------------------------------
-    # COUNTRY
-    # --------------------------------
 
     country3 = st.radio(
         "Where are you watching from?",
@@ -1317,10 +1271,6 @@ with tab3:
         key="recommend_country"
     )
 
-    # --------------------------------
-    # GENRE
-    # --------------------------------
-
     genre3 = st.selectbox(
         "What genre are you in the mood for?",
         genres["name"].tolist(),
@@ -1328,10 +1278,6 @@ with tab3:
         placeholder="Choose a genre",
         key="recommend_genre"
     )
-
-    # --------------------------------
-    # RELEASE YEAR
-    # --------------------------------
 
     year_range3 = st.slider(
         "Choose a release year range:",
@@ -1341,10 +1287,6 @@ with tab3:
         key="recommend_year"
     )
 
-    # --------------------------------
-    # STREAMING SERVICE
-    # --------------------------------
-
     service3 = None
     services3 = None
     country_code3 = None
@@ -1352,7 +1294,7 @@ with tab3:
     if country3 is not None:
         country_code3 = country_codes[country3]
 
-        sources3 = pd.read_csv("Sources.csv")
+        sources3 = pd.read_csv("sources.csv")
 
         services3 = sources3[
             sources3["regions"].str.contains(
@@ -1369,10 +1311,6 @@ with tab3:
             key="recommend_service"
         )
 
-    # --------------------------------
-    # BUTTON
-    # --------------------------------
-
     if st.button(
             "🎯 Find Something For Me",
             type="primary",
@@ -1380,10 +1318,7 @@ with tab3:
             key="recommend_button"
     ):
 
-        # --------------------------------
-        # CHECK USER INPUT
-        # --------------------------------
-
+#Checking the User entred all the required data#
         if media_select3 is None:
 
             st.warning(
@@ -1416,44 +1351,29 @@ with tab3:
 
                 try:
 
-                    # --------------------------------
-                    # CONVERT MEDIA TYPE
-                    # Movie -> movie
-                    # TV Series -> tv_series
-                    # --------------------------------
+                    #converting the Media Type to proper media code
 
                     media_type3 = MediaTypes[
                         media_select3
                     ]
-
-                    # --------------------------------
-                    # GET GENRE ID
-                    # --------------------------------
-
+                    #getting Genre ID
                     genre_id3 = genres.loc[
                         genres["name"] == genre3,
                         "id"
                     ].iloc[0]
 
-                    # --------------------------------
-                    # GET STREAMING SERVICE ID
-                    # --------------------------------
+                   #getting service id
 
                     source_id3 = services3.loc[
                         services3["name"] == service3,
                         "id"
                     ].iloc[0]
 
-                    # --------------------------------
-                    # API CALL 1
-                    # GET MATCHING TITLES
-                    # --------------------------------
-
                     url3 = (
                         "https://api.watchmode.com/"
                         "v1/list-titles/"
                     )
-
+                    #getting the matching title
                     params3 = {
                         "types": media_type3,
                         "regions": country_code3,
@@ -1481,9 +1401,6 @@ with tab3:
                         []
                     )
 
-                    # --------------------------------
-                    # NO RESULTS
-                    # --------------------------------
 
                     if len(titles3) == 0:
 
@@ -1495,33 +1412,22 @@ with tab3:
 
                     else:
 
-                        # --------------------------------
-                        # RANDOMLY CHOOSE FROM
-                        # TOP 50 POPULAR RESULTS
+                        #function chooses from 50 titles collected
 
                         candidate_titles3 = titles3[:50]
 
-                        # --------------------------------
                         # REMOVE ALREADY RECOMMENDED TITLES
-                        # --------------------------------
 
                         available_titles3 = [
                             title for title in candidate_titles3
                             if title["id"] not in st.session_state.recommended_titles
                         ]
 
-                        # --------------------------------
-                        # IF ALL 50 WERE ALREADY SHOWN,
-                        # RESET THE HISTORY
-                        # --------------------------------
+                        #If all recommended already shown, reset
 
                         if len(available_titles3) == 0:
                             st.session_state.recommended_titles = []
                             available_titles3 = candidate_titles3
-
-                        # --------------------------------
-                        # RANDOMLY CHOOSE A NEW TITLE
-                        # --------------------------------
 
                         selected_title3 = random.choice(
                             available_titles3
@@ -1538,11 +1444,6 @@ with tab3:
                             "id"
                         ]
 
-                        # --------------------------------
-                        # API CALL 2
-                        # GET FULL DETAILS
-                        # --------------------------------
-
                         details_url3 = (
                             "https://api.watchmode.com/"
                             f"v1/title/{title_id3}/details/"
@@ -1554,17 +1455,9 @@ with tab3:
                         if details_response3 is not None:
                             title_details3 = details_response3.json()
 
-                        # --------------------------------
-                        # SHOW YOUR EXISTING POPUP
-                        # --------------------------------
-
                         show_random_movie(
                             title_details3
                         )
-
-                # --------------------------------
-                # API / INTERNET ERRORS
-                # --------------------------------
 
                 except requests.exceptions.Timeout:
 
@@ -1603,11 +1496,7 @@ with tab4:
     )
 
     st.divider()
-
-    # ------------------------------------------------
-    # INITIALIZE SESSION STATE
-    # ------------------------------------------------
-
+#storing my search
     if "watch_results4" not in st.session_state:
         st.session_state.watch_results4 = []
 
@@ -1617,19 +1506,11 @@ with tab4:
     if "watch_media4" not in st.session_state:
         st.session_state.watch_media4 = None
 
-    # ------------------------------------------------
-    # TITLE SEARCH
-    # ------------------------------------------------
-
     search_title4 = st.text_input(
         "🎬 Movie or TV Show Name",
         placeholder="Example: Twilight",
         key="watch_search_title"
     )
-
-    # ------------------------------------------------
-    # MEDIA TYPE
-    # ------------------------------------------------
 
     media_select4 = st.radio(
         "What are you looking for?",
@@ -1638,10 +1519,6 @@ with tab4:
         index=None,
         key="watch_media_type"
     )
-
-    # ------------------------------------------------
-    # COUNTRY
-    # ------------------------------------------------
 
     country4 = st.radio(
         "Where are you watching from?",
@@ -1658,9 +1535,6 @@ with tab4:
 
     st.write("")
 
-    # ------------------------------------------------
-    # SEARCH BUTTON
-    # ------------------------------------------------
 
     search_button4 = st.button(
         "🔎 Search For Title",
@@ -1691,12 +1565,9 @@ with tab4:
 
                 try:
 
-                    # ----------------------------------------
-                    # WATCHMODE SEARCH TYPE
-                    #
-                    # 3 = Movies only
-                    # 4 = TV shows only
-                    # ----------------------------------------
+                    #SEARCH TYPES
+                    #3 = Movies only
+                    #4 = TV shows only
 
                     if media_select4 == "Movie":
                         search_type4 = 3
@@ -1713,11 +1584,6 @@ with tab4:
                         "search_type": search_type4
                     }
 
-                    # ----------------------------------------
-                    # API CALL 1
-                    # NORMAL AUTOCOMPLETE SEARCH
-                    # ----------------------------------------
-
                     autocomplete_response4 = watchmode_request(
                         autocomplete_url4,
                         autocomplete_params4
@@ -1732,20 +1598,12 @@ with tab4:
                         []
                     )
 
-                    # ----------------------------------------
-                    # ONLY KEEP TITLES
-                    # ----------------------------------------
 
                     results4 = [
                         result
                         for result in results4
                         if result.get("result_type") == "title"
                     ]
-
-                    # ----------------------------------------
-                    # CHECK HOW SIMILAR RESULTS ARE
-                    # TO WHAT USER ENTERED
-                    # ----------------------------------------
 
                     original_search4 = (
                         search_title4.strip().lower()
@@ -1769,13 +1627,7 @@ with tab4:
                         if similarity4 > best_similarity4:
                             best_similarity4 = similarity4
 
-                    # ----------------------------------------
-                    # TYPO FALLBACK
-                    #
-                    # If no useful results were returned,
-                    # search again using the beginning
-                    # of what the user typed.
-                    # ----------------------------------------
+                    #Typo Handeling
 
                     if (
                             len(results4) == 0
@@ -1805,10 +1657,7 @@ with tab4:
                             "search_type": search_type4
                         }
 
-                        # ------------------------------------
-                        # OPTIONAL API CALL 2
-                        # ONLY USED FOR POSSIBLE MISSPELLING
-                        # ------------------------------------
+                        #incase of misspelling
 
                         fallback_response4 = watchmode_request(
                             autocomplete_url4,
@@ -1835,16 +1684,11 @@ with tab4:
                             ) == "title"
                         ]
 
-                        # Add fallback results
-                        # to original results
+                        # Add fallback results to original results
 
                         results4.extend(
                             fallback_results4
                         )
-
-                    # ----------------------------------------
-                    # REMOVE DUPLICATES
-                    # ----------------------------------------
 
                     unique_results4 = {}
 
@@ -1861,11 +1705,7 @@ with tab4:
                         unique_results4.values()
                     )
 
-                    # ----------------------------------------
-                    # FUZZY MATCH SCORE
-                    #
-                    # Compare user's text to each title.
-                    # ----------------------------------------
+                    # FUZZY MATCH SCORE - Compare user's text to each title
 
                     for result in results4:
                         result_name4 = (
@@ -1885,9 +1725,7 @@ with tab4:
                             "fuzzy_score"
                         ] = fuzzy_score4
 
-                    # ----------------------------------------
-                    # SORT BEST MATCHES FIRST
-                    # ----------------------------------------
+                    #sorting best matches
 
                     results4 = sorted(
                         results4,
@@ -1904,14 +1742,11 @@ with tab4:
                         reverse=True
                     )
 
-                    # Keep a reasonable amount
-                    # of suggestions
+                    # Keep a reasonable amount of suggestions
 
                     results4 = results4[:10]
 
-                    # ----------------------------------------
-                    # SAVE RESULTS
-                    # ----------------------------------------
+                    #saving results
 
                     st.session_state.watch_results4 = (
                         results4
@@ -1960,14 +1795,11 @@ with tab4:
                         f"Something went wrong: {e}"
                     )
 
-    # ------------------------------------------------
-    # SHOW SEARCH RESULTS
-    # ------------------------------------------------
+    #Showing Results
 
     if st.session_state.watch_results4:
 
-        # Only show old results if search text
-        # and media type have not changed
+        # Only show old results if search text and media type have not changed
 
         if (
                 search_title4
@@ -1990,11 +1822,6 @@ with tab4:
             results4 = (
                 st.session_state.watch_results4
             )
-
-
-            # ----------------------------------------
-            # CREATE NICE SELECTBOX TEXT
-            # ----------------------------------------
 
             def format_title4(result):
 
@@ -2041,17 +1868,11 @@ with tab4:
                 key="selected_watch_title4"
             )
 
-            # ----------------------------------------
-            # SHOW SELECTED TITLE INFORMATION
-            # ----------------------------------------
-
             if selected_title4 is not None:
 
                 title_id4 = selected_title4["id"]
 
-                # ----------------------------------------
-                # CHECK IF WE ALREADY LOADED DETAILS
-                # ----------------------------------------
+                #Check if details were loaded
 
                 if "title_details4" not in st.session_state:
                     st.session_state.title_details4 = None
@@ -2059,10 +1880,7 @@ with tab4:
                 if "title_details_id4" not in st.session_state:
                     st.session_state.title_details_id4 = None
 
-                # ----------------------------------------
-                # ONLY CALL DETAILS API IF USER
-                # SELECTED A DIFFERENT TITLE
-                # ----------------------------------------
+                #Call again to api for different title
 
                 if st.session_state.title_details_id4 != title_id4:
 
@@ -2114,9 +1932,7 @@ with tab4:
                                 f"Something went wrong: {e}"
                             )
 
-                # ----------------------------------------
-                # DISPLAY DETAILS
-                # ----------------------------------------
+                #display details
 
                 movie_details4 = (
                     st.session_state.title_details4
@@ -2157,10 +1973,6 @@ with tab4:
                                 poster4,
                                 use_container_width=True
                             )
-
-                    # ------------------------------------
-                    # DETAILS
-                    # ------------------------------------
 
                     with details_col4:
 
@@ -2233,10 +2045,6 @@ with tab4:
                             )
                         )
 
-                    # ------------------------------------
-                    # OVERVIEW
-                    # ------------------------------------
-
                     st.subheader("📖 Overview")
 
                     overview4 = movie_details4.get(
@@ -2256,10 +2064,6 @@ with tab4:
                         )
 
                     st.write("")
-
-                    # ------------------------------------
-                    # AVAILABILITY BUTTON
-                    # ------------------------------------
 
                     find_sources_button4 = st.button(
                         "📺 Find Where To Watch",
@@ -2416,7 +2220,7 @@ with tab5:
             show_statistics_plot(content_counts)
 
 #/Plot of Selected Genres in each service#/
-#/
+
     st.subheader("Choose the Genres that interest you (Max. 5):")
     genres_df = pd.read_csv("generes.csv")
 
@@ -2516,10 +2320,6 @@ with tab5:
                 use_container_width=True
             )
 
-        # ---------------------------------------------------------
-        # CHECK THAT COUNTRY + A Genre was SELECTED
-        # ---------------------------------------------------------
-
         selected_genres = [
             genre
             for genre in [
@@ -2536,10 +2336,7 @@ with tab5:
             zip(genres_df["name"], genres_df["id"])
         )
 
-        # =========================================================
-        # BUTTON 1:
-        # COMPARE THE 5 GENRES BETWEEN 3 MAJOR SERVICES
-        # =========================================================
+        # BUTTON 1:COMPARE THE 5 GENRES BETWEEN 3 MAJOR SERVICES
 
         if show_services:
 
@@ -2556,10 +2353,6 @@ with tab5:
 
                     results = []
 
-                    # ---------------------------------------------
-                    # Only use Netflix, Prime Video and Disney+
-                    # ---------------------------------------------
-
                     major_services = common_services[
                         common_services["name"].str.contains(
                             r"Netflix|Prime Video|Amazon Prime|Disney\+",
@@ -2569,8 +2362,7 @@ with tab5:
                         )
                     ].copy()
 
-                    # Prevent accidentally getting several versions
-                    # of the same service
+                    #Prevent accidentally getting several versions of the same service
                     major_services = major_services.drop_duplicates(
                         subset="name"
                     )
@@ -2649,9 +2441,7 @@ with tab5:
 
                         show_genre_plot(figGenres)
 
-        # =========================================================
-        # CREATE / SAVE DATA FOR THE TWO YEAR-BASED GRAPHS
-        # =========================================================
+        #CREATE/SAVE DATA FOR THE TWO YEAR-BASED GRAPHS
 
         if show_content_years or show_popularity:
 
@@ -2664,14 +2454,14 @@ with tab5:
 
             else:
 
-                # This key represents the user's current selections.
-                # If the country or genres change, new API data is needed.
+                #This key represents the user's current selections
+                #If the country or genres change, new API data is required
                 current_stats_key = (
                     country_genre,
                     tuple(selected_genres)
                 )
 
-                # Check whether we already downloaded this exact data
+                #Check whether we already downloaded this exact data
                 if (
                         "genre_year_data" not in st.session_state
                         or "genre_year_key" not in st.session_state
@@ -2681,10 +2471,6 @@ with tab5:
                     with st.spinner("Loading genre history..."):
 
                         year_results = []
-
-                        # -----------------------------------------
-                        # One API request per genre
-                        # -----------------------------------------
 
                         for genre_name in selected_genres:
 
@@ -2734,8 +2520,7 @@ with tab5:
 
                         genre_year_data = pd.DataFrame(year_results)
 
-                        # Save it so the second graph does not
-                        # request the same API data again
+                        #Save it so the second graph doesnt request the same API data again
                         st.session_state["genre_year_data"] = genre_year_data
                         st.session_state["genre_year_key"] = current_stats_key
 
@@ -2746,10 +2531,7 @@ with tab5:
                         "genre_year_data"
                     ]
 
-                # =================================================
-                # BUTTON 2:
-                # CONTENT COUNT OVER THE YEARS
-                # =================================================
+                #Button 2:CONTENT COUNT OVER THE YEARS
 
                 if show_content_years:
 
@@ -2795,10 +2577,7 @@ with tab5:
 
                         show_genre_plot(figYears)
 
-                # =================================================
-                # BUTTON 3:
-                # POPULARITY OVER THE YEARS
-                # =================================================
+                #BUTTON 3: POPULARITY OVER THE YEARS
 
                 if show_popularity:
 
@@ -2810,7 +2589,6 @@ with tab5:
 
                     else:
 
-                        # Remove rows where Watchmode did not
                         # provide a popularity value
                         popularity_data = genre_year_data.dropna(
                             subset=["Popularity"]
