@@ -936,11 +936,14 @@ def show_random_movie(movie):
 if "recommended_titles" not in st.session_state:
     st.session_state.recommended_titles = []
 
-API_KEY = "mjzfRQYZZq9fMx2RM3c77FX7ncNvgwjtA2Ky3f7q"
+API_KEYS = [
+    st.APIsecrets["API_KEY_1"],
+    st.APIsecrets["API_KEY_2"]
+]
+
 urltitles = "https://api.watchmode.com/v1/list-titles"
 
 License = "Proprietary"
-headers = {"X-API-Key": API_KEY}
 
 sources = pd.read_csv("sources.csv")
 
@@ -954,7 +957,34 @@ st.set_page_config(page_title="Streamer Guide",page_icon="📺",layout="centered
 st.title("▶️Streaming Watch Guide", wrap=True)
 st.caption("Find what to watch. Know where to watch it.")
 
-import streamlit as st
+def watchmode_request(url, params=None):
+
+    for api_key in API_KEYS:
+
+        headers = {
+            "X-API-Key": api_key
+        }
+
+        response = requests.get(
+            url,
+            headers=headers,
+            params=params,
+            timeout=10
+        )
+
+        # This key still works
+        if response.status_code == 200:
+            return response
+
+        # This key has hit a rate/quota limit
+        elif response.status_code == 429:
+            continue
+
+        # Some other API error
+        else:
+            response.raise_for_status()
+
+    raise Exception("No Watchmode API keys are currently available.")
 
 tab1, tab2, tab3, tab4, tab5 = st.tabs([
     "🍿 AVAILABLE IN MY SERVICE",
@@ -1025,13 +1055,10 @@ with tab1:
                         "limit": 250
                     }
 
-                    response = requests.get(
+                    response = watchmode_request(
                         urltitles,
-                        headers=headers,
-                        params=params
+                        params
                     )
-
-                    response.raise_for_status()
 
                     data = response.json()
 
@@ -1129,13 +1156,10 @@ with tab2:
                     "limit": 250
                 }
 
-                response = requests.get(
+                response = watchmode_request(
                     urltitles,
-                    headers=headers,
-                    params=params
+                    params
                 )
-
-                response.raise_for_status()
 
                 data = response.json()
 
@@ -1438,16 +1462,12 @@ with tab3:
                         "limit": 250
                     }
 
-                    response3 = requests.get(
+                    response3 = watchmode_request(
                         url3,
-                        headers=headers,
-                        params=params3,
-                        timeout=10
+                        params3
                     )
-
-                    response3.raise_for_status()
-
-                    data3 = response3.json()
+                    if response3 is not None:
+                        data3 = response3.json()
 
                     titles3 = data3.get(
                         "titles",
@@ -1521,14 +1541,10 @@ with tab3:
                             f"v1/title/{title_id3}/details/"
                         )
 
-                        details_response3 = requests.get(
+                        details_response3 = watchmode_request(
                             details_url3,
-                            headers=headers,
-                            timeout=10
                         )
-
-                        details_response3.raise_for_status()
-
+                        if details_response3 is not None:
                         title_details3 = (
                             details_response3.json()
                         )
@@ -1697,14 +1713,10 @@ with tab4:
                     # NORMAL AUTOCOMPLETE SEARCH
                     # ----------------------------------------
 
-                    autocomplete_response4 = requests.get(
+                    autocomplete_response4 = watchmode_request(
                         autocomplete_url4,
-                        headers=headers,
-                        params=autocomplete_params4,
-                        timeout=10
+                        autocomplete_params4
                     )
-
-                    autocomplete_response4.raise_for_status()
 
                     autocomplete_data4 = (
                         autocomplete_response4.json()
@@ -1793,14 +1805,10 @@ with tab4:
                         # ONLY USED FOR POSSIBLE MISSPELLING
                         # ------------------------------------
 
-                        fallback_response4 = requests.get(
+                        fallback_response4 = watchmode_request(
                             autocomplete_url4,
-                            headers=headers,
-                            params=fallback_params4,
-                            timeout=10
+                            fallback_params4
                         )
-
-                        fallback_response4.raise_for_status()
 
                         fallback_data4 = (
                             fallback_response4.json()
@@ -2064,13 +2072,9 @@ with tab4:
                                 f"v1/title/{title_id4}/details/"
                             )
 
-                            details_response4 = requests.get(
-                                details_url4,
-                                headers=headers,
-                                timeout=10
+                            details_response4 = watchmode_request(
+                                details_url4
                             )
-
-                            details_response4.raise_for_status()
 
                             st.session_state.title_details4 = (
                                 details_response4.json()
@@ -2296,16 +2300,10 @@ with tab4:
                                             country_code4
                                     }
 
-                                    sources_response4 = (
-                                        requests.get(
-                                            sources_url4,
-                                            headers=headers,
-                                            params=sources_params4,
-                                            timeout=10
-                                        )
+                                    sources_response4 = watchmode_request(
+                                        sources_url4,
+                                        sources_params4
                                     )
-
-                                    sources_response4.raise_for_status()
 
                                     watch_sources4 = (
                                         sources_response4.json()
@@ -2388,10 +2386,9 @@ with tab5:
                         "limit": 1
                     }
 
-                    response = requests.get(
+                    response = watchmode_request(
                         urltitles,
-                        headers=headers,
-                        params=params
+                        params
                     )
 
                     if response.status_code == 200:
@@ -2591,11 +2588,9 @@ with tab5:
                                 "limit": 1
                             }
 
-                            response = requests.get(
+                            response = watchmode_request(
                                 urltitles,
-                                headers=headers,
-                                params=params,
-                                timeout=10
+                                params
                             )
 
                             if response.status_code == 200:
@@ -2699,11 +2694,9 @@ with tab5:
 
                             try:
 
-                                response = requests.get(
+                                response = watchmode_request(
                                     urltitles,
-                                    headers=headers,
-                                    params=params,
-                                    timeout=10
+                                    params
                                 )
 
                                 response.raise_for_status()
