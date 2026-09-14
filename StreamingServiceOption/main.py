@@ -483,34 +483,33 @@ st.markdown(
     unsafe_allow_html=True
 )
 #*Function to print all the genres from the API*
-def ShowGenres(API_KEY):
-    headers = {"X-API-Key": API_KEY}
+def ShowGenres():
+
     urlgenres = "https://api.watchmode.com/v1/genres"
-    response = requests.get(urlgenres, headers=headers)
-    response.raise_for_status()
+
+    response = watchmode_request(urlgenres)
+
     genres = response.json()
+
     for genre in genres:
         print(genre["id"], "-", genre["name"])
 
 #*Function to get the services that have the title - then we use the Source_id and Region from what we get to tell where the title is available*
 def GetTitleAvailabel(title_id):
+
     url = f"https://api.watchmode.com/v1/title/{title_id}/sources"
 
-    response = requests.get(url, headers=headers)
-    response.raise_for_status()
+    response = watchmode_request(url)
 
-    title_sources = response.json()
-    return(title_sources)
+    return response.json()
 
 #get movie and tv show details#/
 def get_title_details(title_id):
 
     url = f"https://api.watchmode.com/v1/title/{title_id}/details/"
-    response = requests.get(
-        url,
-        headers=headers
-    )
-    response.raise_for_status()
+
+    response = watchmode_request(url)
+
     return response.json()
 
 @st.dialog("Streaming Content Comparison", width="large")
@@ -568,14 +567,12 @@ def show_statistics_plot(content_counts):
 #*Function to get the episodes that have the title - then we can return the full list of episodes, their length and more*
 #*add a validation with the API that the title is a tv show*#
 def GetTVShowsEpisodes(title_id):
+
     url = f"https://api.watchmode.com/v1/title/{title_id}/episodes"
 
-    response = requests.get(url, headers=headers)
-    response.raise_for_status()
+    response = watchmode_request(url)
 
-    episodes_data = response.json()
-
-    return episodes_data
+    return response.json()
 
 def show_genre_plot(fig):
 
@@ -953,7 +950,7 @@ common_services = sources[
     sources["regions"].str.contains("IL", na=False)
     ]
 
-st.set_page_config(page_title="Streamer Guide",page_icon="📺",layout="centered")
+st.set_page_config(page_title="Streamer Guide",page_icon="▶️",layout="centered")
 st.title("▶️Streaming Watch Guide", wrap=True)
 st.caption("Find what to watch. Know where to watch it.")
 
@@ -1074,14 +1071,14 @@ with tab1:
 
                     st.session_state["titles_results"] = titles
 
-            if "titles_results" in st.session_state:
+        if "titles_results" in st.session_state:
 
-                titles = st.session_state["titles_results"]
+            titles = st.session_state["titles_results"]
 
-                st.divider()
-                st.subheader("Available Titles - Click Box left of the title for more details")
+            st.divider()
+            st.subheader("Available Titles - Click Box left of the title for more details")
 
-                event = st.dataframe(titles,column_order=["title","year","popularity_percentile"],
+            event = st.dataframe(titles,column_order=["title","year","popularity_percentile"],
                                 column_config={
                                 "title": "Title",
                                 "year": "Year",
@@ -1097,16 +1094,24 @@ with tab1:
                         key="titles_table_tab1"
                         )
 
-                if event.selection.rows:
-                        selected_row = event.selection.rows[0]
+            if event.selection.rows:
 
-                        selected_title_id = int(
-                            titles.iloc[selected_row]["id"]
-                            )
+                selected_row = event.selection.rows[0]
 
-                        st.session_state["selected_title_id"] = selected_title_id
+                selected_title_id = int(
+                    titles.iloc[selected_row]["id"]
+                )
 
-                        show_title_details(selected_title_id)
+                # Only open the popup if this is a NEW selection
+                if (
+                        st.session_state.get("last_opened_title_id")
+                        != selected_title_id
+                ):
+                    st.session_state["last_opened_title_id"] = (
+                        selected_title_id
+                    )
+
+                    show_title_details(selected_title_id)
 
 with tab2:
     st.header("📺 TV Show Episode Guide")
@@ -1545,9 +1550,7 @@ with tab3:
                             details_url3,
                         )
                         if details_response3 is not None:
-                        title_details3 = (
-                            details_response3.json()
-                        )
+                            title_details3 = details_response3.json()
 
                         # --------------------------------
                         # SHOW YOUR EXISTING POPUP
