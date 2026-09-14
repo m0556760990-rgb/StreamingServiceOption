@@ -9,7 +9,9 @@ import seaborn as sns
 import base64
 import streamlit as st
 import random
+import os
 from difflib import SequenceMatcher
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 def get_base64_image(image_path):
     with open(image_path, "rb") as image_file:
@@ -942,7 +944,7 @@ urltitles = "https://api.watchmode.com/v1/list-titles"
 
 License = "Proprietary"
 
-sources = pd.read_csv("sources.csv")
+sources = pd.read_csv("Sources.csv")
 
 common_services = sources[
     sources["regions"].str.contains("US", na=False) &
@@ -1350,7 +1352,7 @@ with tab3:
     if country3 is not None:
         country_code3 = country_codes[country3]
 
-        sources3 = pd.read_csv("sources.csv")
+        sources3 = pd.read_csv("Sources.csv")
 
         services3 = sources3[
             sources3["regions"].str.contains(
